@@ -1,0 +1,17 @@
+{
+  "name": "farmzombie-io",
+  "version": "0.14.0",
+  "private": true,
+  "description": "Phase 14: FarmZombie brand, localized main menu and validated multiplayer admission.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.22.1"
+  }
+}
