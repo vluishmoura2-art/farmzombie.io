@@ -10,7 +10,7 @@ Invaders and attackers become hostile to relevant bases. Hostility persists for 
 
 Security controls include explicit Origin allowlisting, random session tokens, monotonic command sequence IDs, strict command fields, finite-number validation, server-side ownership checks, 4 KiB message limits, token-bucket rate limiting, ping/pong heartbeat and bounded outbound buffering. Tokens identify sessions; this is not an account/login system or durable persistence.
 
-For production, terminate HTTPS/WSS at a trusted reverse proxy, set NODE_ENV=production, PUBLIC_ORIGIN=https://your-domain and TRUST_PROXY=1, and forward /ws with WebSocket upgrade headers and X-Forwarded-Proto=https. Keep Node bound to loopback behind that proxy. Without an HTTPS PUBLIC_ORIGIN production startup fails. Certificates, a public domain, external deployment and production capacity validation are not configured by this local change.
+For production, terminate HTTPS/WSS at a trusted reverse proxy, set NODE_ENV=production, PUBLIC_ORIGIN=https://your-domain and TRUST_PROXY=1, and forward /ws with WebSocket upgrade headers and X-Forwarded-Proto=https. Keep Node bound to loopback behind that proxy. On Render, RENDER=true automatically selects the public interface and trusts the Render TLS proxy; RENDER_EXTERNAL_URL supplies the HTTPS origin when PUBLIC_ORIGIN is not set. PORT always takes precedence over the local default of 7777. On other production hosts, an HTTPS PUBLIC_ORIGIN is required. Explicit HOST, PUBLIC_ORIGIN and TRUST_PROXY settings still override these defaults. Certificates, a public domain, external deployment and production capacity validation are not configured by this local change.
 
 Validation commands:
 

@@ -1,4 +1,5 @@
 import { attachMultiplayer } from './server/multiplayer.js';
+import { serverConfig } from './server/config.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -6,10 +7,7 @@ import { resolve, extname, sep } from 'node:path';
 
 const root = fileURLToPath(new URL('./client/', import.meta.url));
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json' };
-const port = Number(process.env.PORT || 7777);
-const production = process.env.NODE_ENV === 'production';
-if (production && !process.env.PUBLIC_ORIGIN?.startsWith('https://')) throw Error('Production requires an HTTPS PUBLIC_ORIGIN and WSS reverse proxy');
-const origins = production ? [process.env.PUBLIC_ORIGIN] : [`http://localhost:${port}`, `http://127.0.0.1:${port}`];
+const { port, host, production, publicOrigin, origins, trustProxy } = serverConfig();
 
 const server = createServer(async (request, response) => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -36,11 +34,14 @@ const server = createServer(async (request, response) => {
   }
 });
 
-const multiplayer = attachMultiplayer(server, { origins, production, trustProxy: process.env.TRUST_PROXY === '1' });
+const multiplayer = attachMultiplayer(server, { origins, production, trustProxy });
 for (const signal of ['SIGTERM','SIGINT']) process.on(signal, async () => { await multiplayer.close(); server.close(() => process.exit(0)); });
 
 server.on('error', (error) => {
   console.error(`Could not start the server: ${error.message}`);
   process.exitCode = 1;
 });
-server.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`farmzombie.io is ready at http://localhost:${port}`));
+server.listen(port, host, () => {
+  console.log(`farmzombie.io listening on http://${host}:${port}`);
+  if (publicOrigin) console.log(`Public URL: ${publicOrigin}`);
+});
