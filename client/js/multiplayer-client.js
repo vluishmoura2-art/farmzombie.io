@@ -1,6 +1,7 @@
 import { takeAdmission } from './admission.js';
 import { equipmentTier } from './equipment-config.js';
 import { GridOccupancy } from './grid-occupancy.js';
+import { Buildings } from './buildings.js';
 
 export class MultiplayerClient {
   constructor(models,onChange) {
@@ -50,7 +51,7 @@ export class MultiplayerClient {
     this.buildings.items=own;this.buildings.base=base?.territory||null;this.buildings.stash=own.find(b=>b.type==='stash')||null;
     this.buildings.counts=Object.fromEntries(Object.keys(this.buildings.counts).map(type=>[type,own.filter(b=>b.type===type).length]));
     this.buildings.occupancy=new GridOccupancy();for(const b of all){b.cellX=b.x/32;b.cellY=b.y/32;this.buildings.occupancy.add(b,2);}
-    this.world.buildings={size:64,items:all,base:this.buildings.base};
+    this.world.buildings={size:this.buildings.size,items:all,base:this.buildings.base,resolveCollision:Buildings.prototype.resolveCollision};
     this.combat.zombies.items=s.zombies;this.combat.towers.projectiles=s.projectiles;this.combat.towers.effects=s.effects;
     const now=performance.now(),ids=new Set();
     for(const p of s.players)if(p.id!==this.id){ids.add(p.id);const previous=this.remote.get(p.id);this.remote.set(p.id,{from:previous?this.interpolate(previous,now):p,to:p,at:now});}
