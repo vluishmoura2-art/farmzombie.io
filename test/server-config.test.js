@@ -15,7 +15,15 @@ test('Render binds all interfaces, uses its assigned port and public URL, and su
 });
 test('explicit settings retain port 7777, custom domain and proxy override', () => {
   const config = serverConfig({RENDER:'true',PORT:'7777',PUBLIC_ORIGIN:'https://farmzombie.example/',RENDER_EXTERNAL_URL:'https://other.onrender.com',HOST:'0.0.0.0',TRUST_PROXY:'0'});
-  assert.equal(config.port,7777);assert.deepEqual(config.origins,['https://farmzombie.example']);assert.equal(config.trustProxy,false);
+  assert.equal(config.port,7777);assert.deepEqual(config.origins,['https://farmzombie.example','https://other.onrender.com']);assert.equal(config.trustProxy,false);
+});
+
+test('Render permits its official URL alongside a custom origin without duplicates', () => {
+  const env = { RENDER:'true', PUBLIC_ORIGIN:'https://farmzombie-io.onrender.com/', RENDER_EXTERNAL_URL:'https://farmzombie-io.onrender.com' };
+  assert.deepEqual(serverConfig(env).origins, ['https://farmzombie-io.onrender.com']);
+  for (const RENDER_EXTERNAL_URL of ['http://example.com', 'https://example.com/path', 'https://user:password@example.com']) {
+    assert.throws(() => serverConfig({ ...env, RENDER_EXTERNAL_URL }), /HTTPS/);
+  }
 });
 test('other production hosts bind publicly but require an explicit HTTPS origin and proxy opt-in', () => {
   assert.throws(()=>serverConfig({NODE_ENV:'production'}),/HTTPS/);
