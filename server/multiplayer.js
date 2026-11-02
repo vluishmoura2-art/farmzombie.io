@@ -9,7 +9,11 @@ export function attachMultiplayer(server,{room=new GameRoom(),origins,production
   const metrics={ticks:0,maxTickMs:0,totalTickMs:0,bytes:0,slowConnections:0};
   server.on('upgrade',(request,socket,head)=>{
     let path;try{path=new URL(request.url,'http://localhost').pathname;}catch{socket.destroy();return;}
-    if(path!=='/ws'||!origins.includes(request.headers.origin)||production&&!(request.socket.encrypted||trustProxy&&request.headers['x-forwarded-proto']==='https')){socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');return;}
+    // Render can forward secure WebSocket upgrades with proto=wss rather than https.
+    const forwardedProto=request.headers['x-forwarded-proto'];
+    const secure=request.socket.encrypted||trustProxy&&(forwardedProto==='https'||forwardedProto==='wss');
+    const rejection=path!=='/ws'?'path':!origins.includes(request.headers.origin)?'origin':production&&!secure?'secure-transport':null;
+    if(rejection){socket.end(`HTTP/1.1 403 Forbidden\r\nX-WebSocket-Rejection: ${rejection}\r\nConnection: close\r\n\r\n`);return;}
     wss.handleUpgrade(request,socket,head,ws=>wss.emit('connection',ws,request));
   });
   const send=(ws,data,shared)=>{if(ws.readyState!==1)return false;if(ws.bufferedAmount>NETWORK_RULES.maxBuffered){metrics.slowConnections++;ws.close(4008,'Slow consumer');return false;}const text=shared?JSON.stringify(data).slice(0,-1)+','+shared+'}':JSON.stringify(data);metrics.bytes+=Buffer.byteLength(text);ws.send(text);return true;};
