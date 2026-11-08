@@ -28,13 +28,13 @@ test('10 clans maximum, 4 members maximum, invitations accept/reject and one mem
 });
 test('leader-only permissions, normal member costs, shared limits and ownership, denied forged placement',()=>{
  const r=setup(),leader=funded(r),p=funded(r);clan(r,leader);member(r,leader,p);base(r,leader);
- const before={...p.harvesting.inventory};assert.equal(cmd(r,p,'place',{type:'mine',x:1120,y:1024}).ok,false);
+ const before={...p.harvesting.inventory};assert.equal(cmd(r,p,'place',{type:'field',x:1120,y:1024}).ok,false);
  assert.equal(cmd(r,p,'permission',{target:p.id,allow:true}).ok,false);
  assert.equal(cmd(r,leader,'permission',{target:p.id,allow:true}).ok,true);
- assert.equal(cmd(r,p,'place',{type:'mine',x:1120,y:1024}).ok,true);
+ assert.equal(cmd(r,p,'place',{type:'field',x:1120,y:1024}).ok,true);
  assert.equal(p.harvesting.inventory.wood,before.wood-9);assert.equal(p.harvesting.inventory.stone,before.stone-9);
  assert.equal(leader.buildings.items.length,2);assert.equal(p.buildings.items.length,0);assert.equal(r.baseFor(p),leader);
- cmd(r,leader,'permission',{target:p.id,allow:false});assert.equal(cmd(r,p,'place',{type:'mine',x:1216,y:1024}).ok,false);
+ cmd(r,leader,'permission',{target:p.id,allow:false});assert.equal(cmd(r,p,'place',{type:'field',x:1216,y:1024}).ok,false);
  assert.equal(cmd(r,p,'upgrade',{id:`${leader.baseId}:2`,tier:1}).ok,false);
  assert.equal(cmd(r,p,'place',{type:'stash',x:3008,y:3008,canBuild:true,ownerId:leader.id}).ok,false);
 });

@@ -22,7 +22,7 @@ function base(s) { assert.ok(s.buildings.place('stash', 1024, 1024, s.player).ok
 
 test('stash is free, unique, permanent and required before other types', () => {
   const s = setup(); Object.assign(s.inventory, { wood: 0, stone: 0, gold: 0 });
-  assert.match(s.buildings.validate('mine', 1024, 1024, s.player), /Stash first/);
+  assert.match(s.buildings.validate('field', 1024, 1024, s.player), /Stash first/);
   base(s);
   assert.deepEqual(s.inventory, { wood: 0, stone: 0, gold: 0 });
   assert.equal(s.buildings.place('stash', 1120, 1024, s.player).ok, false);
@@ -44,7 +44,7 @@ test('preview snaps on the current 32-unit grid; every footprint owns exactly fo
     assert.ok(s.buildings.place(type, 608 + n * 96, 736, s.player).ok);
     assert.equal(s.buildings.occupancy.cells.size, 4 * s.buildings.items.length);
   }
-  preview.select('mine'); preview.update(1024, 1024, s.player);
+  preview.select('field'); preview.update(1024, 1024, s.player);
   assert.match(preview.reason, /occupied/);
   preview.cancel(); assert.equal(preview.visible, false);
 });
@@ -58,23 +58,23 @@ test('invalid placement never charges: world, base edge, grid, resource, player,
   world.resources.add(createResource('tree', 'tree', 800, 800));
   world.resources.add(createResource('stone', 'stone', 896, 800));
   for (const [x, y, p] of [[-32, 1024, player], [world.width, 1024, player], [b.base.right - 32, 1024, player], [b.base.left - 32, 1024, player], [1025, 1200, player], [768, 768, player], [864, 768, player], [1024, 1024, player], [1200, 1200, player], [1216, 1216, new Player(1248, 1248)]]) {
-    assert.equal(b.place('mine', x, y, p).ok, false);
+    assert.equal(b.place('field', x, y, p).ok, false);
     assert.deepEqual(s.inventory, original);
   }
-  assert.equal(b.validate('mine', b.base.right - 64, b.base.top, player), '');
+  assert.equal(b.validate('field', b.base.right - 64, b.base.top, player), '');
   s.inventory.wood = 8;
-  assert.equal(b.place('mine', 1280, 1024, player).ok, false);
+  assert.equal(b.place('field', 1280, 1024, player).ok, false);
   assert.equal(s.inventory.wood, 8);
   s.inventory.wood = NaN;
-  assert.match(b.validate('mine', 1280, 1024, player), /resources/);
+  assert.match(b.validate('field', 1280, 1024, player), /resources/);
 });
 
 test('successful placement pays exact configured costs once; repeated input cannot pay again', () => {
   const s = base(setup()), before = { ...s.inventory };
-  assert.ok(s.buildings.place('mine', 1152, 1024, s.player).ok);
-  for (const key of ['wood', 'stone', 'gold']) assert.equal(s.inventory[key], before[key] - BUILDING_TYPES.mine.cost[key]);
+  assert.ok(s.buildings.place('field', 1152, 1024, s.player).ok);
+  for (const key of ['wood', 'stone', 'gold']) assert.equal(s.inventory[key], before[key] - BUILDING_TYPES.field.cost[key]);
   const after = { ...s.inventory };
-  for (let i = 0; i < 10; i++) assert.equal(s.buildings.place('mine', 1152, 1024, s.player).ok, false);
+  for (let i = 0; i < 10; i++) assert.equal(s.buildings.place('field', 1152, 1024, s.player).ok, false);
   assert.deepEqual(s.inventory, after);
 });
 
@@ -93,23 +93,44 @@ test('all seven independent limits enforce capacity and removal frees exactly fo
   }
 });
 
-test('gold production is integer, frame-rate independent, mine-only and stops on removal', () => {
+test('wheat grows only outside the night and is frame-rate independent', () => {
   for (const fps of [30, 60, 144]) {
     const s = base(setup());
-    const mine = s.buildings.place('mine', 1152, 1024, s.player).building;
-    s.buildings.place('ballista', 1280, 1024, s.player);
-    s.inventory.gold = 0;
+    const field = s.buildings.place('field', 1152, 1024, s.player).building;
     const economy = new GoldEconomy(s.buildings);
-    for (let i = 0; i < 10 * fps; i++) economy.update(1 / fps);
-    assert.equal(s.inventory.gold, 10);
-    s.buildings.remove(mine); economy.update(100);
-    assert.equal(s.inventory.gold, 10);
+    assert.equal(field.growth, 0);
+    for (let i = 0; i < 15 * fps; i++) economy.update(1 / fps, 'day');
+    assert.ok(Math.abs(field.growth - 15 / BUILDING_RULES.growSeconds) < 1e-6);
+    economy.update(60, 'night');
+    assert.ok(Math.abs(field.growth - 15 / BUILDING_RULES.growSeconds) < 1e-6, 'night pauses growth');
+    economy.update(60, 'day');
+    assert.equal(field.growth, 1, 'growth stops at ripe');
   }
-  const s = base(setup({ ...BUILDING_RULES, goldPerSecond: 2.5 }));
-  s.buildings.place('mine', 1152, 1024, s.player); s.inventory.gold = NaN;
+});
+
+test('windmills grind ripe fields in range into gold, one per interval, and replant them', () => {
+  const s = base(setup());
+  const near = s.buildings.place('field', 1152, 1024, s.player).building;
+  const other = s.buildings.place('field', 1216, 1024, s.player).building;
+  const far = s.buildings.place('field', 1024 + 512, 1024 + 448, s.player).building;
   const economy = new GoldEconomy(s.buildings);
-  economy.update(.2); assert.equal(s.inventory.gold, 0);
-  economy.update(.2); assert.equal(s.inventory.gold, 1);
+  economy.update(BUILDING_RULES.growSeconds, 'day');
+  s.inventory.gold = 0;
+  economy.update(5, 'day');
+  assert.equal(s.inventory.gold, 0, 'no windmill, no gold: ripe wheat waits');
+  assert.equal(near.growth, 1);
+  const mill = s.buildings.place('windmill', 1152, 1152, s.player).building;
+  economy.update(BUILDING_RULES.millInterval, 'night');
+  assert.equal(s.inventory.gold, BUILDING_RULES.wheatGold);
+  assert.equal([near, other].filter(f => f.growth === 0).length, 1, 'one field per grind');
+  economy.update(BUILDING_RULES.millInterval, 'night');
+  assert.equal(s.inventory.gold, 2 * BUILDING_RULES.wheatGold);
+  assert.equal(far.growth, 1, 'fields out of range are not ground');
+  economy.update(100, 'night');
+  assert.equal(s.inventory.gold, 2 * BUILDING_RULES.wheatGold, 'nothing left in range to grind');
+  s.buildings.remove(mill);
+  s.inventory.gold = NaN; economy.update(1, 'day');
+  assert.equal(s.inventory.gold, 0);
 });
 
 test('automatic harvesters and manual hits share infinite nodes and exact independent payouts', () => {
@@ -137,7 +158,7 @@ test('automatic harvesters and manual hits share infinite nodes and exact indepe
 
 test('building square collision prevents tunneling, allows retreat and frees movement on removal', () => {
   const s = base(setup());
-  const b = s.buildings.place('mine', 1152, 1024, s.player).building;
+  const b = s.buildings.place('field', 1152, 1024, s.player).building;
   s.player.x = 1184; s.player.y = 800;
   s.player.update(2, { x: 0, y: 1 }, s.world);
   assert.ok(s.player.y <= 1024 - s.player.radius);

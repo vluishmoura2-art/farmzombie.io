@@ -58,7 +58,7 @@ export class MultiplayerClient {
     const now=performance.now(),ids=new Set();
     for(const p of s.players)if(p.id!==this.id){ids.add(p.id);const previous=this.remote.get(p.id);this.remote.set(p.id,{from:previous?this.interpolate(previous,now):p,to:p,at:now});}
     for(const id of this.remote.keys())if(!ids.has(id))this.remote.delete(id);
-    for(const e of s.events){if(e.kind==='damage')this.world.feedback.damage(e.x,e.y,e.amount,e.player);if(e.kind==='harvest'){const members=e.ids.map(id=>this.world.resources.items.find(n=>n.id===id)).filter(Boolean);for(const n of members){n.flashPending=true;n.hitUntil=s.time+.16;}this.world.feedback.harvest(members);}if((e.kind==='death'||e.kind==='combat')&&e.player===this.id)this.message(e.reason);}
+    for(const e of s.events){if(e.kind==='damage')this.world.feedback.damage(e.x,e.y,e.amount,e.player);if(e.kind==='gain')this.world.feedback.gain?.(e.x,e.y,e.amount);if(e.kind==='harvest'){const members=e.ids.map(id=>this.world.resources.items.find(n=>n.id===id)).filter(Boolean);for(const n of members){n.flashPending=true;n.hitUntil=s.time+.16;}this.world.feedback.harvest(members);}if((e.kind==='death'||e.kind==='combat')&&e.player===this.id)this.message(e.reason);}
     this.world.remotePlayers=[...this.remote.values()].map(r=>this.interpolate(r,now));this.world.networkSelf=me;
     const signature=JSON.stringify([s.clans,s.invitations,s.players.map(p=>[p.id,p.name,p.online,p.clanId])]);
     if(this.open&&this.clanSignature!==signature)this.renderClan();this.clanSignature=signature;this.onChange();

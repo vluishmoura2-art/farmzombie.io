@@ -54,7 +54,7 @@ export class Buildings {
   place(type, x, y, player) {
     const reason = this.validate(type, x, y, player);
     if (reason) return { ok: false, reason };
-    const b = { id: this.nextId++, type, x, y, cellX: x / this.world.gridSize, cellY: y / this.world.gridSize, createdAt: this.world.resources.time, angle: 0, tier: 1, active: true, production: 0, harvestElapsed: 0 };
+    const b = { id: this.nextId++, type, x, y, cellX: x / this.world.gridSize, cellY: y / this.world.gridSize, createdAt: this.world.resources.time, angle: 0, tier: 1, active: true, production: 0, harvestElapsed: 0, growth: 0 };
     b.health = b.maxHealth = buildingStats(type).maxHealth;
     b.attackCooldown = 0;
     // No asynchronous work between validation, payment and occupancy commit.

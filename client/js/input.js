@@ -53,12 +53,14 @@ export class Input {
       return;
     }
     if (!MOVEMENT_CODES.has(event.code)) {
-      const slot = /^(Digit|Numpad)([0-9])$/.exec(event.code);
-      const action = slot ? 'slot' : ({KeyE:'auto',KeyQ:'equipment',KeyB:'shop',Escape:'escape',KeyR:'rotate'})[event.code];
+      const digit = /^(Digit|Numpad)([0-9])$/.exec(event.code);
+      // "-" is the ninth building shortcut, after 3–9 and 0.
+      const slot = digit ? Number(digit[2]) : event.code === 'Minus' || event.code === 'NumpadSubtract' ? 10 : null;
+      const action = slot !== null ? 'slot' : ({KeyE:'auto',KeyQ:'equipment',KeyB:'shop',Escape:'escape',KeyR:'rotate'})[event.code];
       if (!action) return;
       event.preventDefault();
       if (down && !event.repeat) {
-        if (this.onShortcut) this.onShortcut(action, slot ? Number(slot[2]) : null);
+        if (this.onShortcut) this.onShortcut(action, slot);
         else if (EQUIPMENT_CODES.has(event.code)) this.onSelectEquipment?.(EQUIPMENT_CODES.get(event.code));
       }
       return;

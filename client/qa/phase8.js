@@ -11,7 +11,7 @@ document.body.append(markup.querySelector('#upgrade-panel'));
 const world = new World(), player = new Player(800,800), inventory = {wood:1000000,stone:1000000,gold:1000000};
 const buildings = new Buildings(world,inventory), drawing = new BuildingRenderer();
 const stash = buildings.place('stash',1024,1024,player).building;
-const mine = buildings.place('mine',1152,1024,player).building;
+const mine = buildings.place('field',1152,1024,player).building;
 const upgrades = new BuildingUpgrades(buildings);
 function refresh() {
  document.querySelector('#balances').textContent = `Wood ${inventory.wood} / Stone ${inventory.stone} / Gold ${inventory.gold}`;

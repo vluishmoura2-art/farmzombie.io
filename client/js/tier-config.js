@@ -38,4 +38,4 @@ const STAT_CACHE = Object.freeze(Object.fromEntries(Object.keys(BUILDING_TYPES).
     return Object.freeze(stats);
   }))
 ])));
-export function buildingStats(type, tier = 1) { return STAT_CACHE[type]?.[tier - 1] || STAT_CACHE.mine[0]; }
+export function buildingStats(type, tier = 1) { return STAT_CACHE[type]?.[tier - 1] || STAT_CACHE.field[0]; }

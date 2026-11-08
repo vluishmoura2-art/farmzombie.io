@@ -24,12 +24,12 @@ export class BuildingHUD {
     this.detail.id = 'building-detail'; this.detail.role = 'tooltip'; this.detail.hidden = true;
     container.parentElement.append(this.detail);
     this.inspected = null;
-    const shortcuts = ['3','4','5','6','7','8','9','0'];
+    const shortcuts = ['3','4','5','6','7','8','9','0','-'];
     for (const [type, definition] of Object.entries(BUILDING_TYPES)) {
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'building-slot'; button.dataset.building = type;
       const cost = definition.cost, shortcut = shortcuts[this.buttons.length];
-      button.setAttribute('aria-keyshortcuts', shortcut);
+      button.setAttribute('aria-keyshortcuts', shortcut === '-' ? 'Minus' : shortcut);
       button.innerHTML = `<span class="slot-key">${shortcut}</span><canvas aria-hidden="true"></canvas><span class="building-name"></span><span class="building-capacity"></span><span class="building-cost">${type === 'stash' ? '' : MATERIALS.filter(m => cost[m] > 0).map(m => `<span class="cost-resource ${m}" data-material="${m}"><i class="resource-symbol" aria-hidden="true"></i><span>${cost[m]}</span></span>`).join('')}</span>`;
       button.querySelector('.building-name').textContent = buildingName(type);
       if (type === 'stash') button.querySelector('.building-cost').textContent = t('build.free');

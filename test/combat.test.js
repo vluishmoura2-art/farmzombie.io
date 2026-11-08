@@ -94,7 +94,7 @@ test('category-specific player, building and stash damage applies once per attac
   for (const type of ZOMBIE_ORDER) {
     const s = setup(), c = ZOMBIE_TYPES[type], z = s.combat.zombies.spawn(type, 3000, 3000);
     const stash = s.buildings.stash;
-    const mine = s.buildings.place('mine', 3200, 3072, s.player).building;
+    const mine = s.buildings.place('field', 3200, 3072, s.player).building;
     for (const [target, damage] of [[s.player,c.playerDamage],[stash,c.stashDamage],[mine,c.buildingDamage]]) {
       z.attackCooldown = 0; const health = target.health;
       s.combat.attack(z, target); assert.equal(target.health, health - damage);
@@ -105,9 +105,9 @@ test('category-specific player, building and stash damage applies once per attac
 
 test('destruction frees building cells/capacity; stash and player deaths end and freeze simulation', () => {
   const s = setup(), z = s.combat.zombies.spawn('yellow', 3000, 3000);
-  const mine = s.buildings.place('mine', 3200, 3072, s.player).building;
+  const mine = s.buildings.place('field', 3200, 3072, s.player).building;
   mine.health = 1; s.combat.attack(z, mine);
-  assert.equal(mine.active, false); assert.equal(s.buildings.remaining('mine'), 8);
+  assert.equal(mine.active, false); assert.equal(s.buildings.remaining('field'), 8);
   assert.ok(s.buildings.occupancy.isFree(100,96,2));
   const stash = s.buildings.stash; stash.health = 1; z.attackCooldown = 0; s.combat.attack(z, stash);
   assert.equal(s.combat.gameOver, true); assert.equal(s.buildings.stash, null); assert.equal(stash.active, false);
@@ -138,7 +138,7 @@ test('all scaled enemies collide with trees and buildings and cannot spawn insid
     s.world.move(z,0,800); assert.ok(z.y <= 3072-z.radius);
     z.x = 2000; z.y = 1700; const tree = createResource('tree','tree',2000,2000); s.world.resources.add(tree);
     s.world.move(z,0,600); assert.ok(z.y <= tree.y-tree.radius-z.radius+.01);
-    assert.match(s.buildings.validate('mine',Math.floor(z.x/32)*32,Math.floor(z.y/32)*32,s.player),/Outside your base|enemy/);
+    assert.match(s.buildings.validate('field',Math.floor(z.x/32)*32,Math.floor(z.y/32)*32,s.player),/Outside your base|enemy/);
   }
 });
 
@@ -165,4 +165,23 @@ test('actual unobstructed zombie travel matches category speed at 30, 60 and 144
     assert.ok(Math.abs((3500-z.x)-ZOMBIE_TYPES[type].speed)<.01,`${type} at ${fps} Hz`);
     assert.ok(Math.abs(z.y-3104)<.01);
   }
+});
+
+test('zombies go for planted wheat before the stash; trampling ruins the crop, an empty field breaks', () => {
+  const s = setup(), z = s.combat.zombies.spawn('green', 2600, 3072);
+  const empty = s.buildings.place('field', 3200, 3200, s.player).building;
+  const planted = s.buildings.place('field', 2880, 3072, s.player).building;
+  planted.growth = .6;
+  assert.equal(s.combat.cropTarget(z), planted, 'only fields with wheat attract zombies');
+  s.combat.updateZombie(z, .01);
+  assert.equal(z.target, planted);
+  planted.health = 1; z.attackCooldown = 0; s.combat.attack(z, planted);
+  assert.equal(planted.active, true, 'a trampled field stays');
+  assert.equal(planted.growth, 0);
+  assert.equal(planted.health, planted.maxHealth);
+  assert.equal(s.combat.cropTarget(z), null);
+  s.combat.updateZombie(z, .01);
+  assert.equal(z.target, s.buildings.stash, 'with no crop left, the stash is next');
+  empty.health = 1; z.attackCooldown = 0; s.combat.attack(z, empty);
+  assert.equal(empty.active, false, 'an empty field is not an indestructible wall');
 });

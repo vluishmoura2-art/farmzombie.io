@@ -68,13 +68,29 @@ export class Combat {
     target.hitUntil = this.world.resources.time + .12;
     target.health = Math.max(0, target.health - damage);
     if (target.health > 0) return;
+    // Trampling a planted field ruins the crop but leaves the plot standing;
+    // an empty plot breaks like any other building.
+    if (target.type === 'field' && (target.growth || 0) > 0) {
+      target.growth = 0; target.health = target.maxHealth; target.trampledAt = this.world.resources.time;
+      return;
+    }
     if (target === this.player) this.end('You were defeated.');
     else if (target.type === 'stash') { this.buildings.destroy(target); this.end('Your Gold Stash was destroyed.'); }
     else this.buildings.destroy(target);
   }
+  // Zombies go for the nearest planted wheat before the stash.
+  cropTarget(z) {
+    let best = null, distance = Infinity;
+    for (const b of this.buildings.items) {
+      if (b.type !== 'field' || !b.active || !((b.growth || 0) > 0)) continue;
+      const d = this.distance(z, b);
+      if (d < distance) { best = b; distance = d; }
+    }
+    return best;
+  }
   updateZombie(z, dt) {
     z.attackCooldown = Math.max(0, z.attackCooldown - dt); z.pathCooldown -= dt;
-    const target = Math.hypot(z.x - this.player.x, z.y - this.player.y) < this.rules.aggroRange ? this.player : this.buildings.stash;
+    const target = Math.hypot(z.x - this.player.x, z.y - this.player.y) < this.rules.aggroRange ? this.player : this.cropTarget(z) || this.buildings.stash;
     if (!target) return;
     if (z.target !== target) { z.target = target; z.pathCooldown = 0; z.path.length = 0; z.pathIndex = 0; }
     const tx = this.centerX(target), ty = this.centerY(target);

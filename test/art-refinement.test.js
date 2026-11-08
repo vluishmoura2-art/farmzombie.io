@@ -72,9 +72,9 @@ test('one rendered white frame and 1.05 midpoint affect all formation members wi
  assert.equal(resourceImpactScale(.16,0),1);assert.equal(resourceImpactScale(.16,.08),1.05);assert.equal(resourceImpactScale(.16,.16),1);
  assert.ok(members.every(n=>n.active&&n.radius===45.5&&n.rewardPerHit===3&&!('health'in n)));assert.deepEqual(inventory,{wood:6,stone:0,gold:0});
 });
-test('all eight hotbar icons have distinct cached geometry and reuse their sprites on later renders',t=>{
- const created=canvasEnvironment(t),icons=new BuildingIcons(),ctx=context(),types=['stash','ballista','cannon','melee','bomb','mage','mine','harvester'];
- for(const type of types)icons.draw(ctx,type,0,0,38);assert.equal(created.length,8);assert.equal(icons.cache.size,8);
- const programs=created.map(c=>JSON.stringify(c.ctx.calls));assert.equal(new Set(programs).size,8);
- for(const type of types)icons.draw(ctx,type,0,0,38);assert.equal(created.length,8);assert.equal(ctx.calls.filter(c=>c.name==='drawImage').length,16);
+test('all nine hotbar icons have distinct cached geometry and reuse their sprites on later renders',t=>{
+ const created=canvasEnvironment(t),icons=new BuildingIcons(),ctx=context(),types=['stash','field','windmill','ballista','cannon','melee','bomb','mage','harvester'];
+ for(const type of types)icons.draw(ctx,type,0,0,38);assert.equal(created.length,9);assert.equal(icons.cache.size,9);
+ const programs=created.map(c=>JSON.stringify(c.ctx.calls));assert.equal(new Set(programs).size,9);
+ for(const type of types)icons.draw(ctx,type,0,0,38);assert.equal(created.length,9);assert.equal(ctx.calls.filter(c=>c.name==='drawImage').length,18);
 });

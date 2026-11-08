@@ -20,7 +20,7 @@ function setup() {
  return {world,player,inventory,buildings,stash,upgrades,equipment,shop};
 }
 function unlock(s,tier) { while(s.stash.tier<tier) assert.equal(s.upgrades.purchase(s.stash,s.stash.tier).ok,true); }
-function mines(s,count=8) { return Array.from({length:count},(_,i)=>s.buildings.place('mine',1152+i%4*96,1024+Math.floor(i/4)*96,s.player).building); }
+function mines(s,count=8) { return Array.from({length:count},(_,i)=>s.buildings.place('field',1152+i%4*96,1024+Math.floor(i/4)*96,s.player).building); }
 
 test('shop contains exactly nine ordered tiers per slot with increasing prices, rewards, damage and speed',()=>{
  for(const id of ['pickaxe','sword']) {
@@ -95,12 +95,12 @@ test('B and HUD shop controls open once, ignore repeats/editable/modifier keys a
 });
 test('Upgrade All advances all eight mines exactly once with complete costs and unchanged positions, IDs, cells and limits',()=>{
  const s=setup(),list=mines(s);unlock(s,2);const before={...s.inventory},cells=[...s.buildings.occupancy.cells];
- const identities=list.map(b=>[b.id,b.x,b.y,b.type]),remaining=s.buildings.remaining('mine');
+ const identities=list.map(b=>[b.id,b.x,b.y,b.type]),remaining=s.buildings.remaining('field');
  const offer=s.upgrades.inspectAll(list[0]);assert.equal(offer.count,8);
- for(const m of ['wood','stone','gold'])assert.equal(offer.cost[m],upgradeCost('mine',2)[m]*8);
+ for(const m of ['wood','stone','gold'])assert.equal(offer.cost[m],upgradeCost('field',2)[m]*8);
  const ids=offer.targets.map(b=>b.id);assert.equal(s.upgrades.purchaseAll(list[0],1,ids).ok,true);
  assert.ok(list.every(b=>b.tier===2));for(const m of ['wood','stone','gold'])assert.equal(s.inventory[m],before[m]-offer.cost[m]);
- assert.deepEqual(list.map(b=>[b.id,b.x,b.y,b.type]),identities);assert.deepEqual([...s.buildings.occupancy.cells],cells);assert.equal(s.buildings.remaining('mine'),remaining);
+ assert.deepEqual(list.map(b=>[b.id,b.x,b.y,b.type]),identities);assert.deepEqual([...s.buildings.occupancy.cells],cells);assert.equal(s.buildings.remaining('field'),remaining);
  const paid={...s.inventory};assert.equal(s.upgrades.purchaseAll(list[0],1,ids).ok,false);assert.deepEqual(s.inventory,paid);
 });
 test('normal upgrades affect one building; mass eligibility excludes other types, other current tiers and locked tiers',()=>{
@@ -126,7 +126,7 @@ test('stale mass membership cannot silently change the displayed transaction',()
  const before={...s.inventory};assert.equal(s.upgrades.purchaseAll(list[0],1,offer.targets.map(b=>b.id)).ok,false);assert.deepEqual(s.inventory,before);assert.equal(list[0].tier,1);
 });
 test('every supported non-stash type can mass-upgrade; Emerald and stash groups are rejected',()=>{
- for(const type of ['ballista','cannon','melee','bomb','mage','mine','harvester']) {
+ for(const type of ['field','windmill','ballista','cannon','melee','bomb','mage','harvester']) {
   const s=setup(),a=s.buildings.place(type,1152,1024,s.player).building,b=s.buildings.place(type,1248,1024,s.player).building;
   unlock(s,9);
   for(let tier=1;tier<9;tier++) { const offer=s.upgrades.inspectAll(a);assert.equal(offer.count,2);assert.equal(s.upgrades.purchaseAll(a,tier,offer.targets.map(b=>b.id)).ok,true);assert.equal(a.tier,tier+1);assert.equal(b.tier,tier+1); }

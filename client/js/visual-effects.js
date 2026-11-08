@@ -34,6 +34,11 @@ export class VisualEffects {
     const n = this.numbers[this.numberCursor++ % this.profile.numbers];
     n.time = .55; n.x = x; n.y = y - 35; n.text = String(Math.ceil(amount)); n.color = danger ? PALETTE.danger : PALETTE.text;
   }
+  gain(x, y, amount) {
+    if (!this.profile.numbers) return;
+    const n = this.numbers[this.numberCursor++ % this.profile.numbers];
+    n.time = .9; n.x = x; n.y = y - 20; n.text = `+${Math.round(amount)}`; n.color = PALETTE.gold;
+  }
   update(dt) {
     for (const p of this.particles) if (p.time > 0) { p.time -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; }
     for (const n of this.numbers) if (n.time > 0) { n.time -= dt; n.y -= 22 * dt; }

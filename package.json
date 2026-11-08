@@ -1,6 +1,6 @@
 {
   "name": "farmzombie-io",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Multiplayer survival .io game: gather, build a base and hold out through zombie nights.",
   "type": "module",

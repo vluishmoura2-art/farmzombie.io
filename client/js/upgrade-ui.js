@@ -1,5 +1,7 @@
 import { showDialog, closeDialog } from './dialog-motion.js';
 import { TIERS, buildingStats, tierOf } from './tier-config.js';
+import { BUILDING_RULES } from './building-config.js';
+import { millRange } from './gold-economy.js';
 import { resourceCount } from './inventory.js';
 import { t, tierName, buildingName, materialName, reasonText } from './i18n.js';
 
@@ -77,7 +79,9 @@ export class UpgradeUI {
       row.append(label, value); costs.append(row);
     }
     const stats = buildingStats(b.type, offer.current), future = buildingStats(b.type, offer.next || offer.current);
-    const benefit = b.type === 'mine' ? t('upgrade.benefitGold', { from: stats.production, to: future.production })
+    const rules = BUILDING_RULES, nextTier = offer.next || offer.current;
+    const benefit = b.type === 'field' ? t('upgrade.benefitWheat', { from: Math.round(rules.wheatGold * stats.production), to: Math.round(rules.wheatGold * future.production) })
+      : b.type === 'windmill' ? t('upgrade.benefitRange', { from: Math.round(millRange({ tier: offer.current }, rules)), to: Math.round(millRange({ tier: nextTier }, rules)) })
       : b.type === 'harvester' ? t('upgrade.benefitHarvest', { from: stats.harvestSpeed.toFixed(1), to: future.harvestSpeed.toFixed(1) })
       : stats.attack ? t('upgrade.benefitDamage', { from: stats.attack.damage.toFixed(1), to: future.attack.damage.toFixed(1) })
       : t('upgrade.benefitHealth', { from: stats.maxHealth, to: future.maxHealth });

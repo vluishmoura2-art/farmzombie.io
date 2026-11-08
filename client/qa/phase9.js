@@ -12,7 +12,7 @@ const markup = new DOMParser().parseFromString(await (await fetch('/')).text(),'
 for(const id of ['upgrade-panel','shop-panel'])document.body.append(markup.querySelector(`#${id}`));
 const inventory={wood:1000000,stone:1000000,gold:1000000},world=new World(),player=new Player(800,800);
 const buildings=new Buildings(world,inventory),stash=buildings.place('stash',1024,1024,player).building;
-const mines=Array.from({length:8},(_,i)=>buildings.place('mine',1152+i%4*96,1024+Math.floor(i/4)*96,player).building);
+const mines=Array.from({length:8},(_,i)=>buildings.place('field',1152+i%4*96,1024+Math.floor(i/4)*96,player).building);
 const tower=buildings.place('ballista',1152,1312,player).building;
 const upgrades=new BuildingUpgrades(buildings);upgrades.purchase(stash,1);
 const equipment=new Equipment(),shop=new EquipmentShop(equipment,inventory,upgrades),drawing=new BuildingRenderer();

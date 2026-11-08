@@ -26,6 +26,6 @@ document.querySelector('#fund').onclick=()=>{Object.assign(inventory,{wood:10000
 document.querySelector('#poor').onclick=()=>{Object.assign(inventory,{wood:12,stone:3,gold:6});draw();};
 document.querySelector('#limit').onclick=()=>{Object.assign(inventory,{wood:10000,stone:10000,gold:10000});for(let i=0;i<8;i++)if(!buildings.items.some(b=>b.type==='ballista'&&b.x===640+i*96))buildings.place('ballista',640+i*96,736,player);draw();};
 document.querySelector('#remove').onclick=()=>{buildings.remove(buildings.items.find(b=>b.type==='ballista'));draw();};
-for(const [id,x] of [['valid',1152],['invalid',1024]])document.querySelector('#'+id).onclick=()=>{placement.select('mine');placement.update(x,1024,player);draw();};
+for(const [id,x] of [['valid',1152],['invalid',1024]])document.querySelector('#'+id).onclick=()=>{placement.select('field');placement.update(x,1024,player);draw();};
 document.querySelector('#building-bar').addEventListener('click',draw);
 window.addEventListener('resize',()=>{hud.resize();draw();});draw();

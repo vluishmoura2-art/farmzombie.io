@@ -165,7 +165,7 @@ input.onShortcut = (action, slot) => {
   if (action === 'shop') { clearControls(); placement.cancel(); buildingHUD.refresh(); shopUI.show(); }
   if (action === 'slot') {
     if (slot === 1 || slot === 2) input.onSelectEquipment(slot - 1);
-    else buildingHUD.buttons[slot === 0 ? 7 : slot - 3]?.click();
+    else buildingHUD.buttons[slot === 0 ? 7 : slot === 10 ? 8 : slot - 3]?.click();
   }
   // Existing square buildings have no directional behavior to rotate.
 };

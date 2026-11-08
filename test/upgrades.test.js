@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { World } from '../client/js/world.js';
 import { Player } from '../client/js/player.js';
 import { Buildings } from '../client/js/buildings.js';
-import { BUILDING_TYPES } from '../client/js/building-config.js';
+import { BUILDING_TYPES, BUILDING_RULES } from '../client/js/building-config.js';
 import { BuildingUpgrades } from '../client/js/building-upgrades.js';
 import { TIERS, MAX_TIER, upgradeCost, buildingStats } from '../client/js/tier-config.js';
 import { payResources } from '../client/js/inventory.js';
-import { GoldEconomy } from '../client/js/gold-economy.js';
+import { GoldEconomy, millRange } from '../client/js/gold-economy.js';
 import { AutomaticHarvester } from '../client/js/automatic-harvester.js';
 import { createResource } from '../client/js/resources.js';
 import { TowerCombat } from '../client/js/tower-combat.js';
@@ -44,7 +44,7 @@ test('new bases and buildings start at Wood; stash gold-only upgrades unlock exa
     assert.equal(s.inventory.wood,wood);assert.equal(s.inventory.stone,stone);assert.ok(s.stash.maxHealth>health);
   }
   const before={...s.inventory};assert.equal(s.upgrades.purchase(s.stash,9).ok,false);assert.deepEqual(s.inventory,before);
-  assert.equal(s.buildings.place('mine',1152,1024,s.player).building.tier,1);
+  assert.equal(s.buildings.place('field',1152,1024,s.player).building.tier,1);
   assert.equal(s.buildings.remaining('stash'),0);
 });
 test('each building upgrades individually, pays all three costs, keeps identity, position, cells and limits', () => {
@@ -65,10 +65,10 @@ test('each building upgrades individually, pays all three costs, keeps identity,
   }
 });
 test('insufficient balances and stale offers never partially pay or double-apply; removed buildings reject', () => {
-  const s=setup(), b=s.buildings.place('mine',1152,1024,s.player).building;
+  const s=setup(), b=s.buildings.place('field',1152,1024,s.player).building;
   s.upgrades.purchase(s.stash,1);
   for(const m of ['wood','stone','gold']) {
-    Object.assign(s.inventory,{wood:1000,stone:1000,gold:1000});s.inventory[m]=upgradeCost('mine',2)[m]-1;
+    Object.assign(s.inventory,{wood:1000,stone:1000,gold:1000});s.inventory[m]=upgradeCost('field',2)[m]-1;
     const before={...s.inventory};assert.equal(s.upgrades.purchase(b,1).ok,false);assert.deepEqual(s.inventory,before);assert.equal(b.tier,1);
   }
   Object.assign(s.inventory,{wood:1000,stone:1000,gold:1000});assert.equal(s.upgrades.purchase(b,1).ok,true);
@@ -96,11 +96,15 @@ test('all tower tiers improve actual damage, speed and applicable splash; all bu
     assert.ok(damage[1]>damage[0],type);
   }
 });
-test('upgraded mines produce more and upgraded harvesters collect formations faster without changing rewards', () => {
-  const s=setup(),mine=s.buildings.place('mine',1152,1024,s.player).building;
+test('upgraded fields yield more gold per harvest, upgraded windmills reach farther, harvesters collect faster', () => {
+  const s=setup(),field=s.buildings.place('field',1152,1024,s.player).building;
   const h=s.buildings.place('harvester',1152,1152,s.player).building;
-  s.upgrades.purchase(s.stash,1);s.upgrades.purchase(mine,1);s.upgrades.purchase(h,1);
-  Object.assign(s.inventory,{wood:0,stone:0,gold:0});new GoldEconomy(s.buildings).update(2);assert.equal(s.inventory.gold,3);
+  const mill=s.buildings.place('windmill',1024,1152,s.player).building;
+  s.upgrades.purchase(s.stash,1);s.upgrades.purchase(field,1);s.upgrades.purchase(h,1);
+  assert.ok(millRange({tier:2},BUILDING_RULES)>millRange(mill,BUILDING_RULES));
+  Object.assign(s.inventory,{wood:0,stone:0,gold:0});new GoldEconomy(s.buildings).update(BUILDING_RULES.growSeconds+BUILDING_RULES.millInterval);
+  assert.equal(s.inventory.gold,Math.round(BUILDING_RULES.wheatGold*buildingStats('field',2).production));
+  assert.ok(s.inventory.gold>BUILDING_RULES.wheatGold);
   const nodes=[createResource('a','tree',1320,1184),createResource('b','stone',1407,1184)];
   for(const node of nodes){node.formationId='mixed';s.world.resources.add(node);}
   s.world.resources.formations.push({id:'mixed',type:'E',members:nodes});

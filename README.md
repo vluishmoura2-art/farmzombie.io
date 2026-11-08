@@ -6,7 +6,7 @@ Move with WASD/arrows, aim with the mouse, select pickaxe/sword with 1/2. Approa
 
 Select a building in the bottom bar, then click the world. Every building occupies exactly 2×2 cells (64×64 units). Green footprints are valid; red footprints include a reason above the bar. Escape or right-click cancels construction; Escape otherwise pauses. Selecting equipment also exits construction. The bar scrolls horizontally on narrow screens.
 
-Place the free, permanent Gold Stash first. It establishes a square 36×36-cell base centered on itself. All other buildings must fit completely inside that base and the world, without overlapping resources, buildings or the player. The first mine costs 9 wood and 9 stone, with no initial gold requirement. Invalid placement never charges. HUD labels use w = wood, s = stone, g = gold.
+Place the free, permanent Gold Stash first. It establishes a square 36×36-cell base centered on itself. All other buildings must fit completely inside that base and the world, without overlapping resources, buildings or the player. The first wheat field costs 9 wood and 9 stone, with no initial gold requirement. Invalid placement never charges. HUD labels use w = wood, s = stone, g = gold.
 
 | Building | Limit | Wood | Stone | Gold |
 |---|---:|---:|---:|---:|
@@ -17,9 +17,10 @@ Place the free, permanent Gold Stash first. It establishes a square 36×36-cell 
 | Bomb Tower | 8 | 12 | 12 | 9 |
 | Mage Tower | 8 | 9 | 12 | 12 |
 | Resource Harvester | 2 | 18 | 18 | 6 |
-| Gold Mine | 8 | 9 | 9 | 0 |
+| Wheat Field | 8 | 9 | 9 | 0 |
+| Windmill | 2 | 15 | 15 | 0 |
 
-Mines produce one gold per second each, regardless of player distance. Harvesters collect one whole formation every two seconds within 260 units of their center, using the same membership, distance rule and rewards as manual harvesting. Nodes have no health or depletion. The same node can supply unlimited manual and automatic hits. Both collectors share the same per-hit accounting; every manual click pays at most once and automatic collection retains its existing interval. All production uses simulation delta time and stops while the game is paused/hidden; no offline production. Reloading resets the session. No resource respawn, selling, moving or saving.
+Gold comes from wheat. Fields grow for 30 seconds outside the night (growth pauses at night) and then stay ripe. Every 2 seconds each windmill grinds the nearest ripe field within 320 units (+10% per windmill tier) into 24 gold (×1.5 per field tier step) and replants it. At night zombies go for the nearest planted field before the stash: trampling a planted field ruins its crop but keeps the plot; an empty plot breaks like any other building. `/qa/farm.html` is an isolated fixture for this loop. Harvesters collect one whole formation every two seconds within 260 units of their center, using the same membership, distance rule and rewards as manual harvesting. Nodes have no health or depletion. The same node can supply unlimited manual and automatic hits. Both collectors share the same per-hit accounting; every manual click pays at most once and automatic collection retains its existing interval. All production uses simulation delta time and stops while the game is paused/hidden; no offline production. Reloading resets the session. No resource respawn, selling, moving or saving.
 
 ## Phase 10.1: character, tool, resource and inventory art
 
@@ -57,7 +58,7 @@ Equipment prices, attributes and tier materials are centralized in `client/js/eq
 
 Right-click an existing non-Stash building for individual and mass upgrade options. **Upgrade** affects only that building, including when Shift is held. **Hold SHIFT and click Upgrade All** to upgrade all active, living buildings of exactly that type and current tier, one tier each. The panel shows eligible count, full wood/stone/gold cost and available balances. Clicking Upgrade All without Shift performs no purchase. Insufficient totals upgrade nothing; one atomic payment covers the entire group. Changed displayed membership is rejected and must be reviewed again. Gold Stash never supports mass upgrades, and buildings cannot exceed its unlocked tier.
 
-For an isolated funded browser fixture, open `/qa/phase9.html`. It includes eight mines, a different building type, tier-unlock and low-resource cases, using the production shop and upgrade modules. It does not change the game session. State remains session-only as in previous phases.
+For an isolated funded browser fixture, open `/qa/phase9.html`. It includes eight wheat fields, a different building type, tier-unlock and low-resource cases, using the production shop and upgrade modules. It does not change the game session. State remains session-only as in previous phases.
 
 ## Base evolution and building upgrades
 
@@ -111,7 +112,7 @@ New modules in `client/js/`:
 - `building-placement.js`: selection, camera-independent world-grid snapping and preview state.
 - `building-renderer.js`: procedural Canvas designs shared by icons/ghosts/world, cached at capped 2× resolution; independent turret angles for future combat.
 - `building-hud.js`: fixed selection bar, costs, capacity, unavailable states and feedback.
-- `gold-economy.js`: per-mine fractional production accumulation and integer payouts.
+- `gold-economy.js`: wheat growth and windmill grinding into integer gold payouts.
 - `automatic-harvester.js`: periodic spatial queries and automatic collection.
 - `resource-hit.js`: single-hit reward transaction shared by manual and automatic collection; no natural-node consumption.
 - `inventory.js`: safe non-negative integer counters, re-exported by harvesting for compatibility.
@@ -130,7 +131,7 @@ Tower effectiveness lives in `client/js/damage-effectiveness.js`. Green takes fu
 
 E toggles Auto Left Click (also available as a HUD button). Q switches tools. Automation runs in the existing frame loop, shares manual harvesting/sword cooldowns and uses the current equipped tool's stats. Sword automation uses the normal cursor-facing attack cone, without auto-aim. Auto actions suspend during pause, menus and building placement, resume when those states end, and disable on death. The HUD shows the state, unavailable reason and selected tool. No timers or synthetic clicks are used.
 
-B opens/closes Shop; Escape closes a menu, cancels construction or pauses. 1/2 select equipment; 3-9 and 0 select the eight existing building slots (0 retains access to Gold Mine). Numpad equivalents work. Shift + Upgrade now uses the same atomic group purchase as Shift + Upgrade All; group membership and current tier rules remain intact. R is reserved: all existing building footprints are square and have no directional placement behavior. Shortcuts ignore typing, composition, modifiers and repeated toggles; routing lives in Input and main.
+B opens/closes Shop; Escape closes a menu, cancels construction or pauses. 1/2 select equipment; 3-9, 0 and - select the nine building slots. Numpad equivalents work. Shift + Upgrade now uses the same atomic group purchase as Shift + Upgrade All; group membership and current tier rules remain intact. R is reserved: all existing building footprints are square and have no directional placement behavior. Shortcuts ignore typing, composition, modifiers and repeated toggles; routing lives in Input and main.
 
 ## Phase 14: main menu and brand
 

@@ -20,7 +20,7 @@ const buildings=new Buildings(world,inventory),placement=new BuildingPlacement(b
 const minimap=new Minimap(document.querySelector('#qa-minimap'),renderer.profile);
 for(let y=2848;y<3296&&!buildings.stash;y+=32)for(let x=2848;x<3296&&!buildings.stash;x+=32)buildings.place('stash',x,y,player);
 for(const type of Object.keys(BUILDING_TYPES).filter(t=>t!=='stash'))for(let y=buildings.base.top;y+64<=buildings.base.bottom&&buildings.remaining(type)>0;y+=96)for(let x=buildings.base.left;x+64<=buildings.base.right&&buildings.remaining(type)>0;x+=96)buildings.place(type,x,y,player);
-for(const [i,b]of buildings.items.entries()){b.tier=i%9+1;b.health=b.maxHealth=buildingStats(b.type,b.tier).maxHealth;b.angle=b.type==='stash'||b.type==='mine'||b.type==='harvester'?0:i*.3;}
+for(const [i,b]of buildings.items.entries()){b.tier=i%9+1;b.health=b.maxHealth=buildingStats(b.type,b.tier).maxHealth;b.angle=b.type==='stash'||b.type==='field'||b.type==='harvester'?0:i*.3;}
 for(let i=0;i<64;i++){const angle=i*Math.PI*2/64,radius=170+i%5*55;combat.zombies.spawn(['green','diamond','yellow'][i%4],player.x+Math.cos(angle)*radius,player.y+Math.sin(angle)*radius);}
 combat.cycle.phase='day';combat.cycle.wave=14;
 document.querySelector('#qa-status').textContent=`${world.resources.items.length} resources / ${buildings.items.length} buildings / ${combat.zombies.items.length} enemies`;

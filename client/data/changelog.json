@@ -1,5 +1,45 @@
 [
   {
+    "version": "0.16.0",
+    "date": "2026-11-08",
+    "title": {
+      "pt-BR": "Trigo e moinhos",
+      "en": "Wheat and windmills",
+      "es": "Trigo y molinos"
+    },
+    "categories": [
+      {
+        "id": "new",
+        "entries": [
+          {
+            "pt-BR": "Canteiros de trigo crescem durante o dia e moinhos de vento transformam o trigo maduro em ouro. Eles substituem a Mina de Ouro.",
+            "en": "Wheat fields grow during the day and windmills turn ripe wheat into gold. They replace the Gold Mine.",
+            "es": "Los campos de trigo crecen de día y los molinos de viento convierten el trigo maduro en oro. Sustituyen a la Mina de Oro."
+          },
+          {
+            "pt-BR": "À noite os zumbis vão atrás da plantação antes do cofre. Trigo pisoteado é colheita perdida.",
+            "en": "At night zombies go for your crops before the stash. Trampled wheat is a lost harvest.",
+            "es": "De noche los zombis van por los cultivos antes que por el cofre. El trigo pisoteado es una cosecha perdida."
+          }
+        ]
+      },
+      {
+        "id": "improvements",
+        "entries": [
+          {
+            "pt-BR": "Nova tecla - para a nona construção.",
+            "en": "New - key for the ninth building.",
+            "es": "Nueva tecla - para la novena construcción."
+          }
+        ]
+      },
+      {
+        "id": "fixes",
+        "entries": []
+      }
+    ]
+  },
+  {
     "version": "0.15.0",
     "date": "2026-11-08",
     "title": {

@@ -35,7 +35,7 @@ test('snapshot movement collides with remote buildings and follows removal and r
   assert.doesNotThrow(() => move(1));
   assert.ok(player.y > 1088);
 
-  remote.buildings.items.push({ id: 1, type: 'mine', x: 1024, y: 1024, active: true, tier: 1 });
+  remote.buildings.items.push({ id: 1, type: 'field', x: 1024, y: 1024, active: true, tier: 1 });
   apply();
   assert.equal(buildings.items.length, 0, 'remote buildings stay outside the local ownership list');
   assert.equal(world.buildings.items.length, 1);

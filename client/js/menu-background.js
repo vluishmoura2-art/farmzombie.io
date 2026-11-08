@@ -28,7 +28,7 @@ export class MenuBackground {
     const bx=this.width*.18,by=this.height*.5;
     ctx.fillStyle='#83613d';ctx.strokeStyle='#3d4228';ctx.lineWidth=4;ctx.fillRect(bx-76,by-78,152,155);ctx.strokeRect(bx-76,by-78,152,155);
     for(const [type,x,y,tier]of [['stash',-32,-32,1],['ballista',-110,-120,3],['cannon',60,45,2],['mage',-115,60,5]])this.buildings.draw(ctx,type,bx+x,by+y,64,0,tier);
-    const x=this.width*.82,y=this.height*.55;this.buildings.draw(ctx,'mine',x,y,64,0,2);this.buildings.draw(ctx,'melee',x+80,y-75,64,0,1);
+    const x=this.width*.82,y=this.height*.55;this.buildings.draw(ctx,'windmill',x,y,64,0,2);this.buildings.draw(ctx,'field',x-70,y+10,64,0,1,3);this.buildings.draw(ctx,'field',x-70,y+80,64,0,1,2);this.buildings.draw(ctx,'melee',x+80,y-75,64,0,1);
   }
   draw(timestamp) {
     const ctx=this.ctx,dpr=Math.min(devicePixelRatio||1,1.5);ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(this.static,0,0);ctx.setTransform(dpr,0,0,dpr,0,0);

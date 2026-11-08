@@ -39,11 +39,21 @@ export class BuildingIcons {
       poly([-17,24,-11,15,10,15,18,24],'#697B87');
       poly([0,-27,13,-9,0,6,-13,-9],'#8C73BE');poly([0,-27,0,6,-13,-9],'#C1B0E2');
       ctx.fillStyle='#C1B0E2';ctx.fillRect(19,-12,3,3);ctx.fillRect(-21,3,3,3);
-    }else if(type==='mine'){
-      poly([-28,23,-25,-4,-12,-24,9,-27,25,-9,28,23],'#667476');
-      poly([-15,23,-15,-7,-6,-16,9,-16,16,-5,16,23],'#18231F');
-      rect(-19,-12,6,35,'#8B5A2B');rect(13,-12,6,35,'#8B5A2B');rect(-20,-17,40,7,'#B38248');
-      poly([20,-7,25,-2,20,4,16,0],'#F1C40F');circle(-5,19,5,'#F1C40F');
+    }else if(type==='field'){
+      // Three golden ears standing on a strip of tilled soil.
+      rect(-26,14,52,11,'#6B4627');
+      ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-22,19);ctx.lineTo(22,19);ctx.stroke();ctx.lineWidth=3;
+      for(const [x,lean] of [[-13,-.25],[0,0],[13,.25]]){
+        ctx.save();ctx.translate(x,14);ctx.rotate(lean);
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-22);ctx.strokeStyle='#9A6B1C';ctx.stroke();ctx.strokeStyle=INK;
+        for(const y of [-30,-24,-18])for(const side of [-1,1]){ctx.fillStyle='#F1C94A';ctx.beginPath();ctx.ellipse(side*3,y,3,5,side*.5,0,Math.PI*2);ctx.fill();ctx.lineWidth=1.5;ctx.stroke();ctx.lineWidth=3;}
+        ctx.restore();
+      }
+    }else if(type==='windmill'){
+      poly([-11,26,-7,-6,7,-6,11,26],'#E9E1CC');poly([-10,-5,0,-15,10,-5],'#A57348');rect(-3,15,6,11,'#6B4627');
+      ctx.save();ctx.translate(0,-8);
+      for(let i=0;i<4;i++){ctx.save();ctx.rotate(Math.PI/4+i*Math.PI/2);rect(-1.5,-24,3,22,'#8B5A2B');rect(1.5,-23,7,16,'#F3ECD8');ctx.restore();}
+      circle(0,0,4,'#5A4A33');ctx.restore();
     }else if(type==='harvester'){
       rect(2,-17,23,36,'#5E744D');rect(-24,17,49,7,'#8B5A2B');
       ctx.save();ctx.translate(-8,-2);ctx.scale(.82,.82);

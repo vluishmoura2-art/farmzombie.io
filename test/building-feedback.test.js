@@ -24,11 +24,11 @@ test('room preview rejects territory bounds, overlap, remote players and permiss
   state.bases=[{id:'other',territory:{left:900,top:900,right:1400,bottom:1400}}];
   assert.equal(reason('stash',1024,1024),'Base territories cannot overlap');
   state.players=[{id:'other',active:true,x:1056,y:1056,radius:35}];
-  assert.equal(reason('mine',1024,1024),'Player occupies footprint');
+  assert.equal(reason('field',1024,1024),'Player occupies footprint');
   state.players[0].active=false;
-  assert.equal(reason('mine',1024,1024),'');
+  assert.equal(reason('field',1024,1024),'');
   state.self.canBuild=false;
-  assert.equal(reason('mine',1024,1024),'Leader building permission required');
+  assert.equal(reason('field',1024,1024),'Leader building permission required');
   state.self.canBuild=true;
   state.players=[{id:'me',clanId:'clan'}];state.clans=[{id:'clan',leader:'leader'}];
   assert.equal(reason('stash',1024,1024),'Only the leader can establish the clan base');
