@@ -21,10 +21,10 @@ function setup(rules = COMBAT_RULES) {
   return { world, player, inventory, buildings, combat };
 }
 
-test('all four categories use original three-part silhouette, exact colors, strictly increasing stats and scaled radius', () => {
+test('all three categories use original three-part silhouette, exact colors, strictly increasing stats and scaled radius', () => {
   assert.deepEqual(HUMANOID_PARTS, [[0, -2, 20, 22, 0], [-20, 8, 10, 11, -.2], [20, 8, 10, 11, .2]]);
   assert.equal(HUMANOID_RADIUS, new Player(0, 0).radius);
-  const colors = [['#48B94C','#287C32'], ['#F2BD39','#A87512'], ['#55A8EA','#27639B'], ['#24B77C','#08754B']];
+  const colors = [['#48B94C','#172018'], ['#55A8EA','#172018'], ['#F2BD39','#172018']];
   for (let i = 0; i < ZOMBIE_ORDER.length; i++) {
     const type = ZOMBIE_ORDER[i], c = ZOMBIE_TYPES[type], z = createZombie(i, type, 100, 100);
     assert.deepEqual([c.color, c.outline], colors[i]);
@@ -38,22 +38,12 @@ test('all four categories use original three-part silhouette, exact colors, stri
   assert.deepEqual(strokes, ['body','left','right']); assert.equal(fill, 'union'); assert.equal(ctx.lineWidth, 5);
 });
 
-test('wave unlocks are 1/4/7/10; old categories remain and higher tiers become more common', () => {
-  for (let wave = 1; wave <= 40; wave++) {
-    const weights = waveWeights(wave);
-    for (let i = 0; i < 4; i++) assert.equal(weights[i] > 0, wave >= ZOMBIE_TYPES[ZOMBIE_ORDER[i]].unlockWave);
-    for (let sample = 0; sample < 1000; sample++) {
-      const type = chooseZombieType(wave, () => sample / 1000);
-      assert.ok(ZOMBIE_TYPES[type].unlockWave <= wave);
-    }
-  }
-  for (const wave of [14, 20, 100]) assert.ok(waveWeights(wave).every(w => w > 0));
-  for (let rank = 1; rank < 4; rank++) {
-    const unlock = ZOMBIE_TYPES[ZOMBIE_ORDER[rank]].unlockWave;
-    const share = wave => { const w = waveWeights(wave); return w[rank] / w.reduce((a,b) => a+b,0); };
-    assert.ok(share(unlock + 2) > share(unlock));
-  }
-  assert.ok(waveWeights(30)[3] > waveWeights(14)[3]);
+test('horde category cutovers replace the old mixed four-category progression',()=>{
+ assert.deepEqual(ZOMBIE_ORDER,['green','diamond','yellow']);
+ for(let wave=1;wave<100;wave++){
+  const expected=wave<=20?'green':wave<=30?'diamond':'yellow';
+  assert.equal(chooseZombieType(wave),expected);assert.equal(waveWeights(wave).reduce((a,b)=>a+b),1);
+ }
 });
 
 test('damage pays no gold; lethal damage pays exactly once across all categories and attackers', () => {
@@ -66,7 +56,7 @@ test('damage pays no gold; lethal damage pays exactly once across all categories
     for (let i = 0; i < 10; i++) assert.equal(field.damage(z, 1000), false);
     assert.equal(inventory.gold, expected); assert.equal(z.rewarded, true);
   }
-  assert.equal(field.rewards.length, 4); assert.equal(field.kills, 4);
+  assert.equal(field.rewards.length, 3); assert.equal(field.kills, 3);
   field.update(2); assert.equal(field.items.length, 0); assert.equal(field.rewards.length, 0);
 });
 
@@ -84,7 +74,7 @@ test('sword damages every category only in range/cone, respects cooldown and pic
   }
 });
 
-test('all five towers damage all four categories; repeated impacts never double-reward a death', () => {
+test('all five towers damage all three categories; repeated impacts never double-reward a death', () => {
   for (const towerType of Object.keys(TOWER_ATTACKS)) for (const type of ZOMBIE_ORDER) {
     const s = setup(); s.inventory.gold = 100;
     const tower = s.buildings.place(towerType, 3200, 3072, s.player).building;
@@ -114,7 +104,7 @@ test('category-specific player, building and stash damage applies once per attac
 });
 
 test('destruction frees building cells/capacity; stash and player deaths end and freeze simulation', () => {
-  const s = setup(), z = s.combat.zombies.spawn('emerald', 3000, 3000);
+  const s = setup(), z = s.combat.zombies.spawn('yellow', 3000, 3000);
   const mine = s.buildings.place('mine', 3200, 3072, s.player).building;
   mine.health = 1; s.combat.attack(z, mine);
   assert.equal(mine.active, false); assert.equal(s.buildings.remaining('mine'), 8);
@@ -124,17 +114,6 @@ test('destruction frees building cells/capacity; stash and player deaths end and
   const before = s.combat.cycle.remaining; s.combat.update(100); assert.equal(s.combat.cycle.remaining, before);
   const other = setup(), enemy = other.combat.zombies.spawn('green',4000,4000);
   other.player.health = 1; other.combat.attack(enemy,other.player); assert.equal(other.combat.gameOver,true);
-});
-
-test('day/night waits for stash and advances waves consistently at different update rates', () => {
-  const rules = { ...COMBAT_RULES, daySeconds: 2, nightSeconds: 3, spawnInterval: .2 };
-  for (const fps of [30,60,144]) {
-    const cycle = new WaveCycle(rules), waves = [];
-    cycle.update(100,false,() => true); assert.equal(cycle.phase,'preparation');
-    for (let i = 0; i < fps * 16; i++) cycle.update(1/fps,true,w => {waves.push(w);return true;});
-    assert.equal(cycle.wave,3); assert.equal(cycle.phase,'day');
-    assert.equal(waves.filter(w=>w===1).length,4); assert.equal(waves.filter(w=>w===2).length,6); assert.equal(waves.filter(w=>w===3).length,8);
-  }
 });
 
 test('navigation avoids resources, respects each radius and refreshes after obstacle removal', () => {

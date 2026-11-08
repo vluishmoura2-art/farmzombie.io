@@ -1,0 +1,98 @@
+[
+  {
+    "version": "0.15.0",
+    "date": "2026-11-08",
+    "title": {
+      "pt-BR": "O jogo inteiro no seu idioma",
+      "en": "The whole game in your language",
+      "es": "Todo el juego en tu idioma"
+    },
+    "categories": [
+      {
+        "id": "new",
+        "entries": [
+          {
+            "pt-BR": "HUD, loja, melhorias, clã, pausa e mensagens do servidor agora em português, inglês e espanhol.",
+            "en": "HUD, shop, upgrades, clan, pause and server messages are now in Portuguese, English and Spanish.",
+            "es": "HUD, tienda, mejoras, clan, pausa y mensajes del servidor ahora en portugués, inglés y español."
+          },
+          {
+            "pt-BR": "As hordas ganharam nome: Errantes, Brutamontes e Colossos.",
+            "en": "Hordes now have names: Shamblers, Brutes and Colossi.",
+            "es": "Las hordas ahora tienen nombre: Errantes, Brutos y Colosos."
+          }
+        ]
+      },
+      {
+        "id": "improvements",
+        "entries": [
+          {
+            "pt-BR": "O contador mostra o dia, a noite e quanto falta para a próxima horda.",
+            "en": "The counter shows day, night and how long until the next horde.",
+            "es": "El contador muestra el día, la noche y cuánto falta para la próxima horda."
+          },
+          {
+            "pt-BR": "Textos mais curtos e diretos; informações técnicas saíram da tela.",
+            "en": "Shorter, clearer text; technical readouts are gone from the screen.",
+            "es": "Textos más cortos y claros; los datos técnicos salieron de la pantalla."
+          }
+        ]
+      },
+      {
+        "id": "fixes",
+        "entries": [
+          {
+            "pt-BR": "Símbolos quebrados (�) no contador de horda.",
+            "en": "Broken symbols (�) in the horde counter.",
+            "es": "Símbolos rotos (�) en el contador de hordas."
+          },
+          {
+            "pt-BR": "A tela de fim de jogo não mostra mais “0 inimigos derrotados” no multijogador.",
+            "en": "The game over screen no longer shows “0 enemies defeated” in multiplayer.",
+            "es": "La pantalla de fin del juego ya no muestra “0 enemigos derrotados” en multijugador."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "0.14.1",
+    "date": "2026-11-02",
+    "title": {
+      "pt-BR": "Histórico de atualizações",
+      "en": "Versioned changelog",
+      "es": "Historial de actualizaciones"
+    },
+    "categories": [
+      {
+        "id": "new",
+        "entries": [
+          {
+            "pt-BR": "Painel de atualizações acessível pelo menu, com versão atual e histórico organizado.",
+            "en": "Menu changelog panel with current version and organized release history.",
+            "es": "Panel de actualizaciones en el menú con versión actual e historial organizado."
+          },
+          {
+            "pt-BR": "Indicador de atualização não lida salvo neste navegador.",
+            "en": "Unread update indicator saved in this browser.",
+            "es": "Indicador de actualización sin leer guardado en este navegador."
+          }
+        ]
+      },
+      {
+        "id": "improvements",
+        "entries": [
+          {
+            "pt-BR": "Notas de atualização em português, inglês e espanhol, com rolagem em telas pequenas.",
+            "en": "Release notes in Portuguese, English and Spanish, with scrolling on small screens.",
+            "es": "Notas en portugués, inglés y español, con desplazamiento en pantallas pequeñas."
+          }
+        ]
+      },
+      {
+        "id": "fixes",
+        "entries": []
+      }
+    ]
+  }
+]

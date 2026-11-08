@@ -14,7 +14,7 @@ export async function runBrowserChecks(tab, { outputDir = resolve('test-results'
     const slots = document.querySelector('#equipment').getBoundingClientRect();
     const counters = document.querySelector('#resource-counters').getBoundingClientRect();
     return {
-      x: Number(document.querySelector('#position-x').value), y: Number(document.querySelector('#position-y').value),
+      x: Number(document.querySelector('#game').dataset.playerX), y: Number(document.querySelector('#game').dataset.playerY),
       wood: Number(document.querySelector('#wood-count').value), stone: Number(document.querySelector('#stone-count').value),
       width: innerWidth, height: innerHeight, bufferWidth: canvas.width, bufferHeight: canvas.height,
       ratio: Math.min(devicePixelRatio || 1, 2),

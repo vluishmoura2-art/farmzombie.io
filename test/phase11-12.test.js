@@ -16,8 +16,8 @@ import { Input } from '../client/js/input.js';
 import { equipmentTier } from '../client/js/equipment-config.js';
 
 for (const type of ['ballista','cannon','melee','bomb','mage']) {
-  test(`${type}: exact damage once across all 36 tier/category combinations`, () => {
-    for (let tier = 1; tier <= 9; tier++) for (const category of ['green','gold','diamond','emerald']) {
+  test(`${type}: exact damage once across all 27 tier/category combinations`, () => {
+    for (let tier = 1; tier <= 9; tier++) for (const category of ['green','diamond','yellow']) {
       const zombies = new Zombies({gold:0});
       const z = zombies.spawn(category, 100, 32); z.health = 10000;
       const tower = {type, tier, x:0, y:0};
@@ -26,13 +26,13 @@ for (const type of ['ballista','cannon','melee','bomb','mage']) {
       system.fire(tower,z,attack);
       tower.tier = 9; // In-flight shots retain the original tier.
       system.update(1);
-      const expectedMultiplier = category === 'green' || tier >= ({gold:5,diamond:7,emerald:9}[category]) ? 1 : ({gold:.35,diamond:.25,emerald:.15}[category]);
+      const expectedMultiplier = category === 'green' || tier >= ({diamond:7,yellow:9}[category]) ? 1 : ({diamond:.25,yellow:.15}[category]);
       assert.ok(Math.abs(10000-z.health-attack.damage*expectedMultiplier)<1e-8, `${tier}/${category}`);
       assert.ok(z.health<10000);
     }
   });
   test(`${type}: all green and matching strong categories can be defeated`, () => {
-    for (const [category,tier] of [['green',1],['gold',5],['diamond',7],['emerald',9]]) {
+    for (const [category,tier] of [['green',1],['diamond',7],['yellow',9]]) {
       const zombies = new Zombies({gold:0}), z = zombies.spawn(category,100,32);
       const tower = {type,tier,x:0,y:0};
       const system = new TowerCombat({size:64,items:[tower]},zombies);
@@ -48,10 +48,10 @@ test('effectiveness accepts balancing overrides',()=>assert.equal(towerMultiplie
 test('area, piercing and chain hits calculate effectiveness separately for each category',()=>{
   for(const type of ['ballista','cannon','melee','bomb','mage']) {
     const zombies=new Zombies({gold:0});
-    const targets=['gold','emerald'].map(category=>zombies.spawn(category,100,32));
+    const targets=['diamond','yellow'].map(category=>zombies.spawn(category,100,32));
     for(const z of targets)z.health=10000;
-    const system=new TowerCombat({size:64,items:[]},zombies),attack=buildingStats(type,5).attack;
-    system.fire({type,tier:5,x:0,y:0},targets[0],attack);system.update(1);
+    const system=new TowerCombat({size:64,items:[]},zombies),attack=buildingStats(type,7).attack;
+    system.fire({type,tier:7,x:0,y:0},targets[0],attack);system.update(1);
     assert.ok(Math.abs(10000-targets[0].health-attack.damage)<1e-8,type);
     assert.ok(Math.abs(10000-targets[1].health-attack.damage*.15)<1e-8,type);
   }
@@ -68,7 +68,7 @@ test('all upgraded auto tools retain their existing rewards, damage and speed',(
     s.auto.toggle();s.auto.update(s);assert.equal(s.harvesting.inventory.wood,s.equipment.selected.rewardPerMember);
     assert.equal(s.harvesting.cooldown,.3/s.equipment.selected.harvestSpeed);
     s.equipment.items[1]=equipmentTier('sword',tier);s.equipment.select(1);s.player.angle=0;
-    const z=s.combat.zombies.spawn('emerald',880,800);z.health=10000;s.auto.update(s);
+    const z=s.combat.zombies.spawn('yellow',880,800);z.health=10000;s.auto.update(s);
     assert.ok(Math.abs(10000-z.health-25*s.equipment.selected.damageMultiplier)<1e-8);
     assert.equal(s.combat.swordCooldown,.45/s.equipment.selected.attackSpeed);
   }
@@ -89,13 +89,13 @@ test('auto harvest pays whole single/double/mixed formations once and shares man
 });
 test('auto sword shares normal cone, range, damage and cooldown; blocking states cannot act',()=>{
   const s=setup();s.equipment.select(1);s.player.angle=0;
-  const z=s.combat.zombies.spawn('emerald',880,800);s.auto.toggle();s.auto.update(s);
-  assert.equal(z.health,255);s.combat.sword(s.equipment);s.auto.update(s);assert.equal(z.health,255);
-  for(const blocked of ['Paused','Menu open','Building placement']) {s.combat.swordCooldown=0;s.auto.update({...s,blocked});assert.equal(z.health,255);assert.match(s.auto.status,/Unavailable/);}
-  s.player.angle=Math.PI;s.auto.update(s);assert.equal(z.health,255);
-  s.combat.swordCooldown=0;s.player.angle=0;z.x=1400;s.auto.update(s);assert.equal(z.health,255);
-  s.combat.swordCooldown=0;z.x=880;s.auto.toggle();s.auto.update(s);assert.equal(z.health,255);
-  s.auto.toggle();s.player.health=0;s.auto.update(s);assert.equal(s.auto.enabled,false);assert.equal(z.health,255);
+  const z=s.combat.zombies.spawn('yellow',880,800);s.auto.toggle();s.auto.update(s);
+  assert.equal(z.health,495);s.combat.sword(s.equipment);s.auto.update(s);assert.equal(z.health,495);
+  for(const blocked of ['Paused','Menu open','Building placement']) {s.combat.swordCooldown=0;s.auto.update({...s,blocked});assert.equal(z.health,495);assert.match(s.auto.status,/Unavailable/);}
+  s.player.angle=Math.PI;s.auto.update(s);assert.equal(z.health,495);
+  s.combat.swordCooldown=0;s.player.angle=0;z.x=1400;s.auto.update(s);assert.equal(z.health,495);
+  s.combat.swordCooldown=0;z.x=880;s.auto.toggle();s.auto.update(s);assert.equal(z.health,495);
+  s.auto.toggle();s.player.health=0;s.auto.update(s);assert.equal(s.auto.enabled,false);assert.equal(z.health,495);
 });
 test('central shortcut dispatch ignores repeats, typing and modifiers, supports all slots and clears movement',()=>{
   const target=new EventTarget(),input=new Input(target),calls=[];input.onShortcut=(...args)=>calls.push(args);

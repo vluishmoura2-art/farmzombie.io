@@ -1,6 +1,7 @@
+import { separateCrowd } from './zombie-crowd.js';
+import { hordeSpec, chooseSize } from './horde-config.js';
+import { createZombie } from './zombies.js';
 import { COMBAT_RULES } from './combat-config.js';
-import { ZOMBIE_TYPES, chooseZombieType } from './zombie-config.js';
-import { HUMANOID_RADIUS } from './humanoid.js';
 import { Zombies } from './zombies.js';
 import { WaveCycle } from './waves.js';
 import { Navigation } from './navigation.js';
@@ -26,15 +27,16 @@ export class Combat {
   end(reason) { this.gameOver = true; this.reason = reason; }
   spawn(wave) {
     if (this.zombies.items.length >= this.rules.maxZombies || !this.buildings.stash) return false;
-    const type = chooseZombieType(wave, this.random), radius = HUMANOID_RADIUS * ZOMBIE_TYPES[type].size;
+    const spec = hordeSpec(wave); spec.size = chooseSize(spec,this.random);
+    const type = spec.category, radius = createZombie(0,type,0,0,spec).radius;
     const stash = this.buildings.stash;
     for (let attempt = 0; attempt < 24; attempt++) {
       const angle = this.random() * Math.PI * 2, distance = this.rules.spawnRadius + this.random() * 180;
       const x = Math.max(radius + 1, Math.min(this.world.width - radius - 1, this.centerX(stash) + Math.cos(angle) * distance));
       const y = Math.max(radius + 1, Math.min(this.world.height - radius - 1, this.centerY(stash) + Math.sin(angle) * distance));
-      if (Math.hypot(x - this.player.x, y - this.player.y) < radius + this.player.radius + 100 || !this.navigation.canStand(x, y, radius)) continue;
+      if (Math.hypot(x - this.player.x, y - this.player.y) < radius + this.player.radius + 100 || !this.navigation.canStand(x, y, radius) || this.spawnBlocked?.(x,y,radius)) continue;
       if (this.zombies.items.some(z => z.active && Math.hypot(z.x - x, z.y - y) < z.radius + radius)) continue;
-      return Boolean(this.zombies.spawn(type, x, y));
+      return Boolean(this.zombies.spawn(type, x, y, spec));
     }
     return false;
   }
@@ -60,7 +62,7 @@ export class Combat {
   }
   attack(z, target) {
     if (z.attackCooldown > 1e-9) return;
-    const c = ZOMBIE_TYPES[z.type]; z.attackCooldown = this.rules.attackInterval;
+    const c = z; z.attackCooldown = this.rules.attackInterval;
     const damage = target === this.player ? c.playerDamage : target.type === 'stash' ? c.stashDamage : c.buildingDamage;
     this.world.feedback?.damage(this.centerX(target), this.centerY(target), Math.min(damage, target.health), target === this.player);
     target.hitUntil = this.world.resources.time + .12;
@@ -111,19 +113,7 @@ export class Combat {
     }
     // Bounded crowd separation; movement still resolves against world obstacles.
     const list = this.zombies.items;
-    for (let i = 0; i < list.length && !this.gameOver; i++) {
-      const a = list[i]; if (!a.active) continue;
-      const pdx = a.x - this.player.x, pdy = a.y - this.player.y, pd = Math.hypot(pdx, pdy), pr = a.radius + this.player.radius;
-      if (pd < pr) this.world.move(a, (pd ? pdx / pd : 1) * (pr - pd + .001), (pd ? pdy / pd : 0) * (pr - pd + .001));
-      for (let j = i + 1; j < list.length; j++) {
-        const b = list[j]; if (!b.active) continue;
-        const dx = b.x - a.x, dy = b.y - a.y, distance = Math.hypot(dx, dy), minimum = a.radius + b.radius;
-        if (distance >= minimum) continue;
-        const push = Math.min((minimum - distance) / 2, 120 * dt);
-        const nx = distance ? dx / distance : 1, ny = distance ? dy / distance : 0;
-        this.world.move(a, -nx * push, -ny * push); this.world.move(b, nx * push, ny * push);
-      }
-    }
+    if(!this.gameOver) separateCrowd(list,this.world,dt,this.player);
     this.zombies.update(dt);
     if (!this.gameOver && this.cycle.phase === 'day' && !list.some(z => z.active && Math.hypot(z.x - this.player.x, z.y - this.player.y) < this.rules.aggroRange)) {
       this.player.health = Math.min(this.player.maxHealth, this.player.health + this.rules.dayHealingPerSecond * dt);

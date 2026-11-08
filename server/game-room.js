@@ -1,3 +1,4 @@
+import { separateCrowd } from '../client/js/zombie-crowd.js';
 import { validateNickname } from '../client/js/nickname.js';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { World } from '../client/js/world.js';
@@ -87,7 +88,7 @@ export class GameRoom {
       }
       if(m.op==='name'){const validation=validateNickname(m.name);if(!validation.ok)throw Error('Nickname must contain 3-16 letters, numbers or underscores');p.name=validation.name;return {ok:true};}
       if(['createClan','invite','invitation','leaveClan','kick','permission'].includes(m.op))return this.clanCommand(p,m);
-      if(m.op==='respawn'){if(p.player.active)throw Error('Still alive');for(const item of [...p.buildings.items]){item.health=0;p.buildings.destroy(item);}p.zombies.items.length=0;p.combat.towers.projectiles.length=0;p.combat.cycle.phase='preparation';p.combat.cycle.wave=0;p.combat.cycle.remaining=60;p.harvesting.inventory.wood=p.harvesting.inventory.stone=p.harvesting.inventory.gold=0;p.equipment=new Equipment();p.shop.equipment=p.equipment;this.refreshBuildings();p.player.health=100;p.player.active=true;p.player.x=p.player.y=3072;p.baseDestroyed=false;p.combat.gameOver=false;return {ok:true};}
+      if(m.op==='respawn'){if(p.player.active)throw Error('Still alive');for(const item of [...p.buildings.items]){item.health=0;p.buildings.destroy(item);}p.zombies.items.length=0;p.combat.towers.projectiles.length=0;p.combat.cycle.reset();p.harvesting.inventory.wood=p.harvesting.inventory.stone=p.harvesting.inventory.gold=0;p.equipment=new Equipment();p.shop.equipment=p.equipment;this.refreshBuildings();p.player.health=100;p.player.active=true;p.player.x=p.player.y=3072;p.baseDestroyed=false;p.combat.gameOver=false;return {ok:true};}
       if(!p.player.active)throw Error('Player is dead');
       if(m.op==='action'){if(!finite(m.angle)||Math.abs(m.angle)>Math.PI*2)throw Error('Invalid angle');p.player.angle=m.angle;return this.action(p);}
       const owner=this.baseFor(p),b=owner.buildings;
@@ -167,6 +168,7 @@ export class GameRoom {
       if(p.buildings.stash){p.economy.update(dt);p.harvester.update(dt);}
       // Existing simulation is shared: menus stop commands, never freeze the world.
       const c=p.combat;c.swordCooldown=Math.max(0,c.swordCooldown-dt);p.player.swordSwingTime=Math.max(0,(p.player.swordSwingTime||0)-dt);
+      c.spawnBlocked=(x,y,radius)=>[...this.players.values()].some(q=>(q.player.active&&Math.hypot(x-q.player.x,y-q.player.y)<radius+q.player.radius+100)||q.zombies.items.some(z=>z.active&&Math.hypot(x-z.x,y-z.y)<radius+z.radius));
       c.cycle.update(dt,Boolean(p.buildings.stash),wave=>this.allZombies.items.length<this.rules.maxZombies&&c.spawn(wave));
       for(const q of this.players.values())if(q.player.active&&!this.friendly(p,q)&&this.inside(q.player,p.buildings.base))p.hostility.set(q.id,this.time+this.rules.hostilitySeconds);
       c.towers.update(dt);c.pathsUsed=0;
@@ -175,12 +177,13 @@ export class GameRoom {
       if(p.player.active&&c.cycle.phase==='day'&&!this.allZombies.items.some(z=>Math.hypot(z.x-p.player.x,z.y-p.player.y)<c.rules.aggroRange))p.player.health=Math.min(100,p.player.health+c.rules.dayHealingPerSecond*dt);
       for(const [id,until]of p.hostility)if(until<this.time)p.hostility.delete(id);
     }
+    separateCrowd(this.allZombies.items,this.world,dt);
     this.refreshBuildings();
   }
   publicPlayer(p){const e=p.player;return {id:p.id,name:p.name,clanId:p.clanId,online:p.online,x:round(e.x),y:round(e.y),angle:round(e.angle,1000),health:round(e.health,100),maxHealth:e.maxHealth,active:e.active,radius:e.radius,walkPhase:round(e.walkPhase,100),harvestSwingTime:round(e.harvestSwingTime,100),swordSwingTime:round(e.swordSwingTime,100),hitUntil:round(e.hitUntil,100),slot:p.equipment.selectedSlot,tiers:p.equipment.items.map(e=>e.tier)};}
   snapshot(p,common){
     const owner=this.baseFor(p),b=owner.buildings,near=z=>Math.hypot(z.x-p.player.x,z.y-p.player.y)<1800;
     const clans=common?.clans || [...this.clans.values()].map(c=>({id:c.id,name:c.name,leader:c.leader,members:c.members.map(id=>{const q=this.players.get(id);return {id,name:q.name,online:q.online,canBuild:q.canBuild};})}));
-    return {op:'state',time:this.time,count:this.online,capacity:this.rules.capacity,players:common?.players || [...this.players.values()].map(q=>this.publicPlayer(q)),clans,invitations:[...this.clans.values()].filter(c=>(c.invitations.get(p.id)||0)>this.time).map(c=>({id:c.id,name:c.name})),self:{id:p.id,inventory:p.harvesting.inventory,baseId:owner.baseId,canBuild:this.canBuild(p),cooldown:p.harvesting.cooldown,swordCooldown:p.combat.swordCooldown,deathReason:p.deathReason||'',cycle:{phase:owner.combat.cycle.phase,wave:owner.combat.cycle.wave,remaining:round(owner.combat.cycle.remaining,100)}},bases:common?.bases || [...this.players.values()].filter(q=>q.buildings.base).map(q=>({id:q.baseId,ownerId:q.id,clanId:q.clanId,territory:q.buildings.base})),buildings:common?.buildings || [...this.players.values()].flatMap(q=>q.buildings.items.map(b=>({id:`${q.baseId}:${b.id}`,baseId:q.baseId,type:b.type,x:b.x,y:b.y,tier:b.tier,health:b.health,maxHealth:b.maxHealth,active:b.active,angle:b.angle,createdAt:b.createdAt,hitUntil:b.hitUntil||0,upgradedAt:b.upgradedAt}))),zombies:[...this.players.values()].flatMap(q=>q.combat.zombies.items.filter(near).map(z=>({id:`${q.id}:${z.id}`,type:z.type,x:z.x,y:z.y,angle:z.angle,radius:z.radius,health:z.health,maxHealth:z.maxHealth,active:z.active,hitFlash:z.hitFlash,walkPhase:z.walkPhase}))),projectiles:[...this.players.values()].flatMap(q=>q.combat.towers.projectiles.filter(near).map(({hit,...rest})=>rest)),effects:[...this.players.values()].flatMap(q=>q.combat.towers.effects.filter(near)),events:this.events};
+    return {op:'state',time:this.time,count:this.online,capacity:this.rules.capacity,players:common?.players || [...this.players.values()].map(q=>this.publicPlayer(q)),clans,invitations:[...this.clans.values()].filter(c=>(c.invitations.get(p.id)||0)>this.time).map(c=>({id:c.id,name:c.name})),self:{id:p.id,inventory:p.harvesting.inventory,baseId:owner.baseId,canBuild:this.canBuild(p),cooldown:p.harvesting.cooldown,swordCooldown:p.combat.swordCooldown,deathReason:p.deathReason||'',cycle:owner.combat.cycle.snapshot()},bases:common?.bases || [...this.players.values()].filter(q=>q.buildings.base).map(q=>({id:q.baseId,ownerId:q.id,clanId:q.clanId,territory:q.buildings.base})),buildings:common?.buildings || [...this.players.values()].flatMap(q=>q.buildings.items.map(b=>({id:`${q.baseId}:${b.id}`,baseId:q.baseId,type:b.type,x:b.x,y:b.y,tier:b.tier,health:b.health,maxHealth:b.maxHealth,active:b.active,angle:b.angle,createdAt:b.createdAt,hitUntil:b.hitUntil||0,upgradedAt:b.upgradedAt}))),zombies:[...this.players.values()].flatMap(q=>q.combat.zombies.items.filter(near).map(z=>({id:`${q.id}:${z.id}`,type:z.type,size:z.size,wave:z.wave,x:z.x,y:z.y,angle:z.angle,radius:z.radius,health:z.health,maxHealth:z.maxHealth,active:z.active,hitFlash:z.hitFlash,walkPhase:z.walkPhase}))),projectiles:[...this.players.values()].flatMap(q=>q.combat.towers.projectiles.filter(near).map(({hit,...rest})=>rest)),effects:[...this.players.values()].flatMap(q=>q.combat.towers.effects.filter(near)),events:this.events};
   }
 }

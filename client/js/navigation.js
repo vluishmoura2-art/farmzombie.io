@@ -47,6 +47,7 @@ export class Navigation {
     }
     const size = this.world.buildings?.size || 0;
     for (const b of this.world.buildings?.items || []) mark(b.x - radius, b.y - radius, b.x + size + radius, b.y + size + radius, (x, y) => circleOverlapsSquare({ x, y, radius }, b.x, b.y, size));
+    if (this.maps.size >= 8) this.maps.delete(this.maps.keys().next().value);
     this.maps.set(radius, map); return map;
   }
   push(id, score) {

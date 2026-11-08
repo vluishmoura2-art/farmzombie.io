@@ -1,19 +1,17 @@
 <!doctype html>
 <html lang="pt-BR"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#5AAE33"><title>farmzombie.io — Cultive. Construa. Defenda.</title>
+<meta name="theme-color" content="#5AAE33"><title>farmzombie.io — Semeie sua base. Sobreviva à noite.</title>
 <link rel="icon" href="/brand-mark.svg"><link rel="stylesheet" href="/style.css"><script type="module" src="/js/menu.js"></script>
 </head><body class="in-menu">
 <main id="main-menu" aria-labelledby="menu-logo">
  <canvas id="menu-world" aria-hidden="true"></canvas><div class="menu-shade" aria-hidden="true"></div>
  <div class="menu-layout">
-  <div class="menu-topline"><span class="menu-signal" aria-hidden="true"></span><span data-i18n="menu.eyebrow">SOBREVIVÊNCIA COOPERATIVA</span></div>
   <section class="menu-card">
+   <canvas class="menu-tool" width="64" height="64" aria-hidden="true"></canvas>
    <img class="menu-mark" src="/brand-mark.svg" alt="" width="66" height="66">
    <h1 id="menu-logo" aria-label="farmzombie.io"><span class="logo-farm">farm</span><span class="logo-zombie">zombie</span><span class="logo-io">.io</span></h1>
-   <p class="menu-motto" data-i18n="menu.motto">Cultive. Construa. Defenda.</p>
-   <div class="menu-divider" aria-hidden="true"><span></span><i></i><span></span></div>
-   <h2 data-i18n="menu.tagline">Semeie sua base. Sobreviva à noite.</h2>
+   <p class="menu-motto" data-i18n="menu.motto">Semeie sua base. Sobreviva à noite.</p>
    <p class="menu-description" data-i18n="menu.description">Colete recursos, construa defesas e enfrente os zumbis com seu clã.</p>
    <form id="join-form" novalidate>
     <label for="nickname" data-i18n="menu.nickname">Apelido</label>
@@ -22,76 +20,64 @@
     <button id="play-button" type="submit"><span data-i18n="menu.play">JOGAR</span><span class="play-arrow" aria-hidden="true">→</span></button>
     <p id="menu-status" role="status" aria-live="polite" data-state="ready">Pronto para sobreviver?</p>
    </form>
-   <div class="menu-language"><label for="menu-language" data-i18n="menu.changeLanguage">Mudar idioma</label><select id="menu-language"><option value="pt-BR">Português (Brasil)</option><option value="en">English</option><option value="es">Español</option></select></div>
+   <div class="menu-updates"><button id="changelog-button" type="button" aria-haspopup="dialog" aria-controls="changelog-panel"><span data-i18n="changelog.button">NOVIDADES</span> <span id="changelog-new" class="update-badge" hidden></span></button><span id="game-version" aria-live="polite"></span></div>
+   <div class="menu-language"><label for="menu-language"><svg class="language-globe" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6.5h14M5 17.5h14"/></svg><span class="sr-only" data-i18n="menu.changeLanguage">Mudar idioma</span></label><select id="menu-language"><option value="pt-BR">Português (Brasil)</option><option value="en">English</option><option value="es">Español</option></select></div>
   </section>
   <footer class="menu-footer"><span data-i18n="menu.capacity">Até 50 jogadores por servidor</span><span data-i18n="menu.controls">WASD para mover · Mouse para mirar</span></footer>
-  <p class="menu-background-note" data-i18n="menu.backgroundNote">Mundo ilustrativo · sua partida começa ao jogar</p>
  </div>
+ <dialog id="changelog-panel" aria-labelledby="changelog-title"><header><h2 id="changelog-title"></h2><button id="changelog-close" type="button"></button></header><div id="changelog-content" tabindex="0"></div></dialog>
 </main>
-<main id="game-shell" class="game" aria-label="farmzombie.io game" hidden>
-<canvas id="game" tabindex="0" aria-label="Grass arena. WASD moves, mouse aims. 1 pickaxe, 2 sword. Left click harvests or attacks. Right-click a building to upgrade; B opens shop. Touch: use direction pad, tap to aim and act, hold a building to inspect."></canvas>
+<main id="game-shell" class="game" aria-label="farmzombie.io" hidden>
+<canvas id="game" tabindex="0" data-i18n-aria="game.canvas" aria-label="Mundo do jogo. WASD move, mouse mira, clique esquerdo coleta ou ataca, botão direito numa construção para melhorar, B abre a loja."></canvas>
 <header class="top-bar">
- <div class="brand"><div class="wordmark">farmzombie<span>.io</span></div><span class="brand-subtitle">SURVIVAL</span><span class="phase">PHASE 14</span></div>
- <div class="session"><button id="clan-button" class="shop-button" type="button">Clan</button><button id="shop-button" class="shop-button" type="button" aria-keyshortcuts="B">Shop <kbd>B</kbd></button><button id="pause-button" class="pause-button" type="button" aria-label="Pause game" aria-keyshortcuts="Escape">Ⅱ</button></div>
+ <div class="brand"><div class="wordmark">farmzombie<span>.io</span></div></div>
+ <div class="session"><button id="clan-button" class="shop-button" type="button" data-i18n="game.clan">Clã</button><button id="shop-button" class="shop-button" type="button" aria-keyshortcuts="B"><span data-i18n="game.shop">Loja</span> <kbd>B</kbd></button><button id="pause-button" class="pause-button" type="button" data-i18n-aria="game.pause" aria-label="Pausar" aria-keyshortcuts="Escape">Ⅱ</button></div>
 </header>
-<section id="combat-hud" aria-label="Survival status">
- <span id="cycle-status">Place Gold Stash to begin</span><span id="base-tier">WOOD BASE</span>
- <div class="survival-details"><span>STASH <output id="stash-health">Not placed</output></span><span>HOSTILES <output id="enemy-count">0</output></span></div>
- <button id="auto-action" class="shop-button" type="button" aria-keyshortcuts="E" aria-pressed="false">Auto Left Click OFF / E</button><span id="self-identity"></span><small id="network-status">Connecting...</small><small id="network-message" role="status"></small><small>Q switch tools / Shift + Upgrade: upgrade group</small>
+<section id="combat-hud" data-i18n-aria="hud.label" aria-label="Sobrevivência">
+ <span id="cycle-status"></span><span id="base-tier"></span>
+ <div class="survival-details"><span><span data-i18n="hud.stash">COFRE</span> <output id="stash-health"></output></span><span><span data-i18n="hud.hostiles">ZUMBIS</span> <output id="enemy-count">0</output></span></div>
+ <button id="auto-action" class="shop-button" type="button" aria-keyshortcuts="E" aria-pressed="false"></button><small id="network-status"></small><small id="network-message" role="status"></small><small data-i18n="hud.hint">Q troca ferramenta · Shift + melhorar: todas iguais</small>
 </section>
-<aside class="tactical-hud" aria-label="Resources and tactical status">
- <div id="resource-counters" class="resource-counters" role="group" aria-label="Collected resources">
-  <div class="resource-count"><span class="resource-marker wood-marker" aria-hidden="true"></span><span class="resource-label">WOOD</span><output id="wood-count" aria-label="Wood collected">0</output></div>
-  <div class="resource-count"><span class="resource-marker stone-marker" aria-hidden="true"></span><span class="resource-label">STONE</span><output id="stone-count" aria-label="Stone collected">0</output></div>
-  <div class="resource-count"><span class="resource-marker gold-marker" aria-hidden="true"></span><span class="resource-label">GOLD</span><output id="gold-count" aria-label="Gold collected">0</output></div>
+<aside class="tactical-hud" data-i18n-aria="hud.resources" aria-label="Recursos">
+ <div id="resource-counters" class="resource-counters" role="group" data-i18n-aria="hud.resources" aria-label="Recursos">
+  <div class="resource-count"><span class="resource-marker wood-marker" aria-hidden="true"></span><span class="resource-label" data-i18n="hud.wood">MADEIRA</span><output id="wood-count" data-i18n-aria="hud.wood" aria-label="Madeira">0</output></div>
+  <div class="resource-count"><span class="resource-marker stone-marker" aria-hidden="true"></span><span class="resource-label" data-i18n="hud.stone">PEDRA</span><output id="stone-count" data-i18n-aria="hud.stone" aria-label="Pedra">0</output></div>
+  <div class="resource-count"><span class="resource-marker gold-marker" aria-hidden="true"></span><span class="resource-label" data-i18n="hud.gold">OURO</span><output id="gold-count" data-i18n-aria="hud.gold" aria-label="Ouro">0</output></div>
  </div>
- <div class="tactical-map"><canvas id="minimap" role="img" aria-label="Tactical minimap"></canvas><div class="map-legend"><i class="you-dot"></i>YOU <i class="base-dot"></i>BASE <i class="enemy-dot"></i>ENEMY</div>
- <div class="health-label"><span>HEALTH</span><output id="player-health">100 / 100</output></div><progress id="health-bar" max="100" value="100" aria-label="Player health"></progress></div>
- <div class="position"><span class="position-label">WORLD</span> <output id="position-x">3072</output><span> / </span><output id="position-y">3072</output></div>
+ <div class="tactical-map"><canvas id="minimap" role="img" data-i18n-aria="hud.minimap" aria-label="Minimapa"></canvas><div class="map-legend"><i class="you-dot"></i><span data-i18n="hud.you">VOCÊ</span> <i class="base-dot"></i><span data-i18n="hud.base">BASE</span> <i class="enemy-dot"></i><span data-i18n="hud.enemy">ZUMBI</span></div>
+ <div class="health-label"><span data-i18n="hud.health">VIDA</span><output id="player-health">100 / 100</output></div><progress id="health-bar" max="100" value="100" data-i18n-aria="hud.health" aria-label="Vida"></progress></div>
 </aside>
 <p id="harvest-feedback" class="harvest-feedback" role="status" aria-live="polite" hidden></p>
 <div class="game-dock">
- <footer class="bottom-bar"><div class="equipment-cluster"><span class="dock-label">EQUIPMENT</span><div id="equipment" class="equipment-hud" role="group" aria-label="Equipment slots">
-  <button class="equipment-slot" type="button" data-slot="0" aria-label="Wooden pickaxe, slot 1" aria-keyshortcuts="1" aria-pressed="true" title="Wooden pickaxe (1)"><canvas width="88" height="88" aria-hidden="true"></canvas><span class="slot-key">1</span></button>
-  <button class="equipment-slot" type="button" data-slot="1" aria-label="Wooden sword, slot 2" aria-keyshortcuts="2" aria-pressed="false" title="Wooden sword (2)"><canvas width="88" height="88" aria-hidden="true"></canvas><span class="slot-key">2</span></button>
+ <footer class="bottom-bar"><div class="equipment-cluster"><span class="dock-label" data-i18n="hud.equipment">FERRAMENTAS</span><div id="equipment" class="equipment-hud" role="group" data-i18n-aria="hud.equipment" aria-label="Ferramentas">
+  <button class="equipment-slot" type="button" data-slot="0" aria-keyshortcuts="1" aria-pressed="true"><canvas width="88" height="88" aria-hidden="true"></canvas><span class="slot-key">1</span></button>
+  <button class="equipment-slot" type="button" data-slot="1" aria-keyshortcuts="2" aria-pressed="false"><canvas width="88" height="88" aria-hidden="true"></canvas><span class="slot-key">2</span></button>
   <span class="sr-only" role="status" aria-live="polite"></span></div></div></footer>
- <section class="building-panel" aria-label="Base construction"><p id="build-status" role="status"></p><div id="building-bar" role="group" aria-label="Building selection"></div></section>
+ <section class="building-panel" data-i18n-aria="hud.build" aria-label="Construção"><p id="build-status" role="status"></p><div id="building-bar" role="group" data-i18n-aria="hud.build" aria-label="Construção"></div></section>
 </div>
-<div id="touch-controls" aria-label="Touch controls"><div class="touch-pad"><button data-move="up" aria-label="Move up">↑</button><button data-move="left" aria-label="Move left">←</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div><button data-action class="touch-action">Use tool</button></div>
-      <dialog id="upgrade-panel" aria-labelledby="upgrade-name">
-
-        <header><span class="eyebrow">BASE EVOLUTION</span><button type="button" data-close aria-label="Close upgrade panel">×</button></header>
-
-        <h2 id="upgrade-name" data-name></h2><p data-unlocked class="upgrade-muted"></p>
-
-        <div class="upgrade-preview"><canvas width="128" height="128" aria-label="Next tier building preview"></canvas><div><small>CURRENT TIER</small><p data-current></p><small>NEXT TIER</small><p data-next></p></div></div>
-
-        <p data-benefit class="upgrade-benefit"></p>
-
-        <div data-costs aria-label="Upgrade costs and resource balances"></div>
-
-        <p data-reason class="upgrade-muted"></p>
-
-        <button type="button" data-upgrade></button>
-
-        <section data-mass-section class="mass-upgrade">
-          <h3>Upgrade All</h3><p data-mass-count></p><p data-mass-cost></p><p data-mass-balance class="upgrade-muted"></p>
-          <p data-mass-reason class="upgrade-muted"></p><p data-mass-hint class="upgrade-muted"></p>
-          <button type="button" data-touch-shift class="touch-modifier" aria-pressed="false">Touch: enable group upgrade</button><button type="button" data-upgrade-all disabled>Upgrade All</button>
-        </section>
-        <p data-message role="status" aria-live="polite"></p>
-
-        <small class="upgrade-muted">Controls paused while inspecting · Esc to close</small>
-
-      </dialog>
-
-      <dialog id="shop-panel" aria-labelledby="shop-title">
-        <header><div><span class="eyebrow">EQUIPMENT SHOP</span><h2 id="shop-title">Tools for the next night</h2></div><button type="button" data-shop-close aria-label="Close equipment shop">×</button></header>
-        <p data-shop-balance class="shop-balance"></p><div data-shop-cards class="shop-cards"></div>
-        <p data-shop-message role="status" aria-live="polite"></p><small class="upgrade-muted">Gold only · Limited by Gold Stash tier · Shared world remains active · Esc / B to close</small>
-      </dialog>
-
-<dialog id="clan-panel" aria-labelledby="clan-title"><header><h2 id="clan-title">Players &amp; Clan</h2><button data-clan-close type="button">Close</button></header><label>Player name <input data-player-name maxlength="16" placeholder="Your name"></label><button data-save-name type="button">Save name</button><p data-clan-status></p><div data-create-section><label>Clan name <input data-clan-name maxlength="24" placeholder="Clan name"></label><button data-create-clan type="button">Create clan</button></div><div data-members></div><button data-leave-clan type="button" hidden>Leave clan</button><p data-clan-message role="status"></p><small>Leader controls building permissions. Friendly clan members cannot damage each other.</small></dialog>
-<section id="pause-overlay" class="pause-overlay" aria-labelledby="pause-title" hidden><div class="pause-card"><span class="eyebrow">SURVIVAL ON HOLD</span><h1 id="pause-title">Controls paused.</h1><p>The shared world continues. Other players and enemies remain active.</p><label class="quality-label" for="performance-mode">RENDER QUALITY</label><select id="performance-mode"><option value="quality">Quality</option><option value="balanced" selected>Balanced</option><option value="performance">Performance</option></select><label class="touch-setting"><input id="touch-mode" type="checkbox"> Show touch controls</label><output id="performance-stats" class="upgrade-muted">Measuring renderer…</output><p class="control-guide">WASD move · Mouse aim · 1 / 2 tools / Q switch / E auto<br>3–9 / 0 build · B shop · Esc pause<br>Touch: tap to act · Hold a building to inspect</p><button id="resume-button" type="button">Resume survival <span>→</span></button><span class="pause-hint">or press Esc</span></div></section>
-<section id="game-over" class="pause-overlay" aria-labelledby="game-over-title" hidden><div class="pause-card"><span class="eyebrow">SURVIVAL ENDED</span><h1 id="game-over-title">Game Over</h1><p id="game-over-message"></p><button id="restart-button" type="button">Start a new world <span>→</span></button></div></section>
+<div id="touch-controls" data-i18n-aria="touch.label" aria-label="Controles de toque"><div class="touch-pad"><button data-move="up" data-i18n-aria="touch.up" aria-label="Para cima">↑</button><button data-move="left" data-i18n-aria="touch.left" aria-label="Para a esquerda">←</button><button data-move="down" data-i18n-aria="touch.down" aria-label="Para baixo">↓</button><button data-move="right" data-i18n-aria="touch.right" aria-label="Para a direita">→</button></div><button data-action class="touch-action" data-i18n="touch.action">Usar</button></div>
+<dialog id="upgrade-panel" aria-labelledby="upgrade-name">
+ <header><span class="eyebrow" data-i18n="upgrade.eyebrow">EVOLUÇÃO DA BASE</span><button type="button" data-close data-i18n-aria="common.close" aria-label="Fechar">×</button></header>
+ <h2 id="upgrade-name" data-name></h2><p data-unlocked class="upgrade-muted"></p>
+ <div class="upgrade-preview"><canvas width="128" height="128" data-i18n-aria="upgrade.preview" aria-label="Prévia do próximo nível"></canvas><div><small data-i18n="upgrade.current">NÍVEL ATUAL</small><p data-current></p><small data-i18n="upgrade.next">PRÓXIMO NÍVEL</small><p data-next></p></div></div>
+ <p data-benefit class="upgrade-benefit"></p>
+ <div data-costs data-i18n-aria="upgrade.costs" aria-label="Custo da melhoria"></div>
+ <p data-reason class="upgrade-muted"></p>
+ <button type="button" data-upgrade></button>
+ <section data-mass-section class="mass-upgrade">
+  <h3 data-i18n="upgrade.all">Melhorar todas</h3><p data-mass-count></p><p data-mass-cost></p><p data-mass-balance class="upgrade-muted"></p>
+  <p data-mass-reason class="upgrade-muted"></p><p data-mass-hint class="upgrade-muted"></p>
+  <button type="button" data-touch-shift class="touch-modifier" aria-pressed="false" data-i18n="upgrade.touchShift">Toque: ativar melhoria em grupo</button><button type="button" data-upgrade-all disabled data-i18n="upgrade.all">Melhorar todas</button>
+ </section>
+ <p data-message role="status" aria-live="polite"></p>
+ <small class="upgrade-muted" data-i18n="upgrade.footer">Controles pausados · Esc fecha</small>
+</dialog>
+<dialog id="shop-panel" aria-labelledby="shop-title">
+ <header><div><span class="eyebrow" data-i18n="shop.eyebrow">LOJA</span><h2 id="shop-title" data-i18n="shop.title">Ferramentas para a próxima noite</h2></div><button type="button" data-shop-close data-i18n-aria="common.close" aria-label="Fechar">×</button></header>
+ <p data-shop-balance class="shop-balance"></p><div data-shop-cards class="shop-cards"></div>
+ <p data-shop-message role="status" aria-live="polite"></p><small class="upgrade-muted" data-i18n="shop.footer">Melhore o Cofre de Ouro para liberar níveis · Esc ou B fecha</small>
+</dialog>
+<dialog id="clan-panel" aria-labelledby="clan-title"><header><h2 id="clan-title" data-i18n="clan.title">Jogadores e clã</h2><button data-clan-close type="button" data-i18n="common.close">Fechar</button></header><label><span data-i18n="clan.playerName">Seu nome</span> <input data-player-name maxlength="16" data-i18n-placeholder="clan.playerName" placeholder="Seu nome"></label><button data-save-name type="button" data-i18n="clan.saveName">Salvar nome</button><p data-clan-status></p><div data-create-section><label><span data-i18n="clan.clanName">Nome do clã</span> <input data-clan-name maxlength="24" data-i18n-placeholder="clan.clanName" placeholder="Nome do clã"></label><button data-create-clan type="button" data-i18n="clan.create">Criar clã</button></div><div data-members></div><button data-leave-clan type="button" hidden data-i18n="clan.leave">Sair do clã</button><p data-clan-message role="status"></p><small data-i18n="clan.footer">O líder decide quem pode construir. Membros do mesmo clã não se ferem.</small></dialog>
+<section id="pause-overlay" class="pause-overlay" aria-labelledby="pause-title" hidden><div class="pause-card"><span class="eyebrow" data-i18n="pause.eyebrow">PAUSA</span><h1 id="pause-title" data-i18n="pause.title">Controles pausados</h1><p data-i18n="pause.body">O mundo não para: outros jogadores e zumbis continuam ativos.</p><label class="quality-label" for="performance-mode" data-i18n="pause.quality">QUALIDADE GRÁFICA</label><select id="performance-mode"><option value="quality" data-i18n="pause.qualityHigh">Alta</option><option value="balanced" selected data-i18n="pause.qualityBalanced">Equilibrada</option><option value="performance" data-i18n="pause.qualityFast">Desempenho</option></select><label class="touch-setting"><input id="touch-mode" type="checkbox"> <span data-i18n="pause.touch">Mostrar controles de toque</span></label><output id="performance-stats" class="upgrade-muted"></output><p class="control-guide"><span data-i18n="pause.guideMove">WASD move · mouse mira · 1 / 2 ferramentas · Q troca · E automático</span><br><span data-i18n="pause.guideBuild">3–9 / 0 constrói · B loja · Esc pausa</span><br><span data-i18n="pause.guideTouch">Toque: toque para agir · segure numa construção para inspecionar</span></p><button id="resume-button" type="button"><span data-i18n="pause.resume">Voltar ao jogo</span> <span>→</span></button><span class="pause-hint" data-i18n="pause.hint">ou aperte Esc</span></div></section>
+<section id="game-over" class="pause-overlay" aria-labelledby="game-over-title" hidden><div class="pause-card"><span class="eyebrow" data-i18n="gameOver.eyebrow">A NOITE VENCEU</span><h1 id="game-over-title" data-i18n="gameOver.title">Fim de jogo</h1><p id="game-over-message"></p><button id="restart-button" type="button"><span data-i18n="gameOver.restart">Recomeçar</span> <span>→</span></button></div></section>
 </main></body></html>

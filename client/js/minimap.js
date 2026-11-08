@@ -1,4 +1,5 @@
 import { PALETTE } from './visual-config.js';
+import { t } from './i18n.js';
 
 // Fit the whole rectangular world inside a circle, preserving its aspect ratio.
 export function worldToMinimap(x, y, width, height, size, output = {}) {
@@ -48,7 +49,7 @@ export class Minimap {
     const p = worldToMinimap(player.x,player.y,world.width,world.height,size,this.point);
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(player.angle);ctx.fillStyle=PALETTE.text;ctx.strokeStyle='#182016';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-3,-3);ctx.lineTo(-2,0);ctx.lineTo(-3,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
-    const label=`Tactical minimap. Player ${Math.round(player.x)}, ${Math.round(player.y)}. ${nearby} nearby enemies. North is up.`;
+    const label=t('hud.minimapLabel',{count:nearby});
     if(this.canvas.getAttribute('aria-label')!==label)this.canvas.setAttribute('aria-label',label);
   }
 }

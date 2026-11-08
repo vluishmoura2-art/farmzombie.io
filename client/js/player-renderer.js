@@ -12,10 +12,10 @@ export class PlayerRenderer {
     }
     ctx.drawImage(this.sprites[index],-32,-32,64,64);
   }
-  drawEquipped(ctx, tools, item, angle, swing = 0, hit = false) {
+  drawEquipped(ctx, tools, item, angle, swing = 0, hit = false, reflection = null) {
     ctx.save();ctx.rotate(angle-Math.PI/2);
     ctx.save();ctx.translate(TOOL_ATTACHMENT.x,TOOL_ATTACHMENT.y);ctx.rotate(swing);
-    tools.draw(ctx,item.id,item.tier);ctx.restore();this.draw(ctx,hit);ctx.restore();
+    tools.draw(ctx,item.id,item.tier,reflection);ctx.restore();this.draw(ctx,hit);ctx.restore();
   }
   drawGeometry(ctx, hit = false) {
     ctx.lineWidth = PLAYER_ART.outline; ctx.strokeStyle = INK; ctx.fillStyle = PLAYER_ART.skin;

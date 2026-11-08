@@ -1,6 +1,6 @@
 export const COMBAT_RULES = Object.freeze({
-  daySeconds: 60, nightSeconds: 45, spawnInterval: .85, spawnRadius: 700,
-  initialWaveSize: 4, waveGrowth: 2, maxWaveSize: 40, maxZombies: 64,
+  daySeconds: 60, spawnRadius: 700,
+  maxZombies: 256,
   attackInterval: 1, attackReach: 10, aggroRange: 230,
   pathInterval: .8, pathsPerFrame: 2, pathNodeBudget: 1800,
   playerHealth: 100, stashHealth: 600, buildingHealth: 220,

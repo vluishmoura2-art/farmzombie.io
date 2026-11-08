@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phase 17 gameplay HUD QA</title><link rel="stylesheet" href="/style.css"></head>
+<body><canvas id="qa-world" style="width:100vw;height:100vh;display:block"></canvas>
+<nav style="position:fixed;top:12px;left:12px;display:flex;gap:8px;flex-wrap:wrap;max-width:calc(100% - 24px)"><button id="fund">Fund inventory</button><button id="poor">Missing 3 stone</button><button id="limit">Eight ballistas</button><button id="remove">Remove ballista</button><button id="valid">Valid footprint</button><button id="invalid">Occupied footprint</button></nav>
+<div class="game-dock"><div class="building-panel"><p id="build-status" role="status"></p><div id="building-bar"></div></div></div>
+<script type="module" src="./phase17.js"></script></body></html>

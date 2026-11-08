@@ -1,6 +1,8 @@
 export const PALETTE = Object.freeze({ ground: '#5AAE33', grid: '#4E992B', outside: '#427f29',
   panel: 'rgba(20,24,20,.85)', secondary: 'rgba(30,36,29,.92)', border: '#414B3B',
   text: '#F1F3ED', muted: '#AAB3A5', gold: '#F1C40F', wood: '#8D6E63', stone: '#7F8C8D', danger: '#EF766C' });
+// Segoe UI only exists on Windows; fall back to each platform's UI font.
+export const CANVAS_FONT = '"Segoe UI", system-ui, -apple-system, Roboto, sans-serif';
 export const PERFORMANCE_MODES = Object.freeze({
   quality: Object.freeze({ dpr: 2, particles: 64, numbers: 24, shadows: true, minimapHz: 10, motion: true }),
   balanced: Object.freeze({ dpr: 1.5, particles: 24, numbers: 16, shadows: true, minimapHz: 5, motion: true }),

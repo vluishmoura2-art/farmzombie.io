@@ -1,6 +1,7 @@
 import { equipmentTier } from './equipment-config.js';
 import { PlayerRenderer } from './player-renderer.js';
-import { PALETTE, performanceProfile, effectiveDpr, FrameMetrics } from './visual-config.js';
+import { PALETTE, CANVAS_FONT, performanceProfile, effectiveDpr, FrameMetrics } from './visual-config.js';
+import { t } from './i18n.js';
 import { ResourceRenderer } from './resource-renderer.js';
 import { BuildingRenderer } from './building-renderer.js';
 import { HumanoidRenderer } from './humanoid.js';
@@ -68,11 +69,11 @@ export class Renderer {
       const friendly=world.networkSelf?.clanId && world.networkSelf.clanId===remote.clanId;
       ctx.save();ctx.translate(remote.x,remote.y);
       if(remote.active) this.playerDrawing.drawEquipped(ctx,this.equipmentDrawing,equipmentTier(remote.slot?'sword':'pickaxe',remote.tiers[remote.slot]),remote.angle,remote.swordSwingTime>0?.5:0,remote.hitUntil>world.resources.time);
-      ctx.font='bold 12px Segoe UI';ctx.textAlign='center';ctx.strokeStyle='#13200f';ctx.lineWidth=3;ctx.fillStyle=friendly?'#b7e983':'#ffb28e';
-      const label=`${remote.name}${remote.clanName?' ['+remote.clanName+']':''}${remote.active?'':' (dead)'}`;ctx.strokeText(label,0,-52);ctx.fillText(label,0,-52);
+      ctx.font=`bold 12px ${CANVAS_FONT}`;ctx.textAlign='center';ctx.strokeStyle='#13200f';ctx.lineWidth=3;ctx.fillStyle=friendly?'#b7e983':'#ffb28e';
+      const label=`${remote.name}${remote.clanName?' ['+remote.clanName+']':''}${remote.active?'':` (${t('hud.downed')})`}`;ctx.strokeText(label,0,-52);ctx.fillText(label,0,-52);
       ctx.fillStyle='#202d1d';ctx.fillRect(-25,-46,50,5);ctx.fillStyle=friendly?'#8cda61':'#ee735f';ctx.fillRect(-25,-46,50*remote.health/remote.maxHealth,5);ctx.restore();
     }
-    if(world.networkSelf){ctx.save();ctx.font='bold 12px Segoe UI';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.strokeStyle='#13200f';ctx.lineWidth=3;const me=world.networkSelf;const label=me.name+(me.clanName?' ['+me.clanName+']':'');ctx.strokeText(label,player.x,player.y-52);ctx.fillText(label,player.x,player.y-52);ctx.restore();}
+    if(world.networkSelf){ctx.save();ctx.font=`bold 12px ${CANVAS_FONT}`;ctx.textAlign='center';ctx.fillStyle='#fff';ctx.strokeStyle='#13200f';ctx.lineWidth=3;const me=world.networkSelf;const label=me.name+(me.clanName?' ['+me.clanName+']':'');ctx.strokeText(label,player.x,player.y-52);ctx.fillText(label,player.x,player.y-52);ctx.restore();}
     if (this.profile.shadows) {
       ctx.fillStyle = '#20331c38'; ctx.beginPath(); ctx.ellipse(player.x+5,player.y+9,28,18,0,0,Math.PI*2);ctx.fill();
     }
@@ -80,7 +81,8 @@ export class Renderer {
     ctx.translate(player.x, player.y + bob);
     // Visual grip rotation is separate from all combat/harvesting hit tests.
     const swing = equipment.selected.id === 'pickaxe' ? player.harvestSwingAngle : player.swordSwingTime > 0 ? Math.sin((1-player.swordSwingTime/.24)*Math.PI*2)*.8 : 0;
-    this.playerDrawing.drawEquipped(ctx,this.equipmentDrawing,equipment.selected,player.angle,swing,player.hitUntil>world.resources.time);
+    const reflection = this.profile.motion && !this.reducedMotion && player.swordSwingTime > 0 && equipment.selected.id === 'sword' ? 1-player.swordSwingTime/.24 : null;
+    this.playerDrawing.drawEquipped(ctx,this.equipmentDrawing,equipment.selected,player.angle,swing,player.hitUntil>world.resources.time,reflection);
     ctx.restore();
     ctx.save(); ctx.translate(-left,-top); world.feedback?.draw(ctx,left,top,this.width,this.height); ctx.restore();
     // Subtle flat night tint; DOM HUD remains readable and screen-fixed.

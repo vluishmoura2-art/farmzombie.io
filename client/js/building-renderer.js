@@ -116,12 +116,20 @@ export class BuildingRenderer {
         ctx.fillRect(b.x + 6, b.y - 8, (size - 12) * Math.max(0, b.health / b.maxHealth), 3);
       }
     }
+    if (placement.pending) {
+      const pending=placement.pending;
+      ctx.save();ctx.globalAlpha=.65;
+      this.draw(ctx,pending.type,pending.x,pending.y,size);
+      ctx.globalAlpha=1;ctx.strokeStyle='#F2CF54';ctx.lineWidth=3;ctx.setLineDash([6,4]);
+      ctx.strokeRect(pending.x+1,pending.y+1,size-2,size-2);ctx.restore();
+      return;
+    }
     if (!placement.visible) return;
-    ctx.save(); ctx.globalAlpha = .55;
+    ctx.save(); ctx.globalAlpha = .75;
     this.draw(ctx, placement.selected, placement.x, placement.y, size);
-    ctx.globalAlpha = .22; ctx.fillStyle = placement.reason ? '#d73636' : '#a9ed7d';
+    ctx.globalAlpha = .28; ctx.fillStyle = placement.reason ? '#ed6760' : '#69e898';
     ctx.fillRect(placement.x, placement.y, size, size);
-    ctx.globalAlpha = 1; ctx.strokeStyle = placement.reason ? '#a32c2c' : '#e4ffd1'; ctx.lineWidth = 2;
+    ctx.globalAlpha = 1; ctx.strokeStyle = placement.reason ? '#ff7971' : '#69e898'; ctx.lineWidth = 2;
     ctx.strokeRect(placement.x + 1, placement.y + 1, size - 2, size - 2);
     ctx.beginPath(); ctx.moveTo(placement.x + size / 2, placement.y); ctx.lineTo(placement.x + size / 2, placement.y + size);
     ctx.moveTo(placement.x, placement.y + size / 2); ctx.lineTo(placement.x + size, placement.y + size / 2); ctx.stroke(); ctx.restore();

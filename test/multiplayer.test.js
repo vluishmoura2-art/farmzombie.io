@@ -77,7 +77,7 @@ for(const type of ['ballista','cannon','melee','bomb','mage'])test(`${type} prot
  a.combat.cycle.phase='night';b.player.health=10000;b.player.x=1184;b.player.y=950;const before=b.player.health;r.tick(.05);tower.attackCooldown=100;for(let i=0;i<20;i++)r.tick(.05);assert.ok(b.player.health<before,type);
  const damage=buildingStats(type,5).attack.damage;assert.ok(Math.abs(before-b.player.health-damage)<1e-7,type);
  clan(r,a);member(r,a,b);b.player.health=100;tower.attackCooldown=0;for(let i=0;i<60;i++)r.tick(.05);assert.equal(b.player.health,100);
- const z=a.combat.zombies.spawn('emerald',1184,950);z.health=10000;tower.attackCooldown=100;a.combat.towers.fire(tower,z,buildingStats(type,5).attack);a.combat.towers.update(1);assert.ok(Math.abs(10000-z.health-damage*.15)<1e-7);
+ const z=a.combat.zombies.spawn('yellow',1184,950);z.health=10000;tower.attackCooldown=100;a.combat.towers.fire(tower,z,buildingStats(type,5).attack);a.combat.towers.update(1);assert.ok(Math.abs(10000-z.health-damage*.15)<1e-7);
 });
 test('hostility persists after leaving territory, expires, and sword aggression marks allied bases',()=>{
  const r=setup(),a=funded(r),b=funded(r);base(r,a);b.player.x=1100;b.player.y=1100;r.tick(.05);b.player.x=b.player.y=4000;assert.equal(r.hostile(a,b),true);

@@ -1,4 +1,5 @@
 import { resourceCount } from './harvesting.js';
+import { t, materialName } from './i18n.js';
 export class ResourceHUD {
   constructor(container, inventory) {
     this.inventory = inventory;
@@ -20,10 +21,10 @@ export class ResourceHUD {
     if (result.status === 'cooldown') return;
     if (result.status === 'hit') {
       this.refresh();
-      this.feedback.textContent = Object.entries(result.rewards).filter(([, amount]) => amount > 0).map(([material, amount]) => `${material === 'wood' ? 'Wood' : 'Stone'} +${amount}`).join(' · ');
-    } else if (result.status === 'wrong-tool') this.feedback.textContent = 'Equip the pickaxe (1) to harvest.';
-    else if (result.status === 'out-of-range') this.feedback.textContent = 'Move closer to harvest.';
-    else this.feedback.textContent = 'Move near a tree or stone and click to harvest.';
+      this.feedback.textContent = Object.entries(result.rewards).filter(([, amount]) => amount > 0).map(([material, amount]) => t('harvest.gain', { material: materialName(material), amount })).join(' · ');
+    } else if (result.status === 'wrong-tool') this.feedback.textContent = t('harvest.wrongTool');
+    else if (result.status === 'out-of-range') this.feedback.textContent = t('harvest.tooFar');
+    else this.feedback.textContent = t('harvest.nothing');
     this.feedback.hidden = false;
     this.feedbackTime = 2.5;
   }

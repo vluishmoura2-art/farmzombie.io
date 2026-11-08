@@ -1,3 +1,4 @@
+import { t, equipmentName } from './i18n.js';
 
 export class EquipmentHUD {
   constructor(container, equipment, drawing) {
@@ -27,11 +28,12 @@ export class EquipmentHUD {
   refresh() {
     for (const button of this.buttons) {
       const item = this.equipment.items[Number(button.dataset.slot)];
-      button.setAttribute('aria-label', `${item.name}, slot ${Number(button.dataset.slot) + 1}`);
-      button.title = `${item.name} (${Number(button.dataset.slot) + 1})`;
+      const label = t('equipment.slot', { name: equipmentName(item), key: Number(button.dataset.slot) + 1 });
+      button.setAttribute('aria-label', label);
+      button.title = label;
       button.setAttribute('aria-pressed', String(Number(button.dataset.slot) === this.equipment.selectedSlot));
     }
-    this.announcement.textContent = `${this.equipment.selected.name} equipped`;
+    this.announcement.textContent = t('equipment.equipped', { name: equipmentName(this.equipment.selected) });
   }
 
   resize() {

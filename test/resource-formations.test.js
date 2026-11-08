@@ -9,6 +9,10 @@ import { Harvesting } from '../client/js/harvesting.js';
 import { Equipment } from '../client/js/equipment.js';
 import { AutomaticHarvester } from '../client/js/automatic-harvester.js';
 import { ResourceHUD } from '../client/js/resource-hud.js';
+import { readFileSync } from 'node:fs';
+import { i18n } from '../client/js/i18n.js';
+i18n.dictionaries.set('en', JSON.parse(readFileSync(new URL('../client/locales/en.json', import.meta.url), 'utf8')));
+i18n.language = 'en';
 import { Camera } from '../client/js/camera.js';
 
 test('all five formation types have exact membership', () => {

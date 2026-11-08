@@ -1,8 +1,8 @@
 {
   "name": "farmzombie-io",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
-  "description": "Phase 14: FarmZombie brand, localized main menu and validated multiplayer admission.",
+  "description": "Multiplayer survival .io game: gather, build a base and hold out through zombie nights.",
   "type": "module",
   "scripts": {
     "start": "node server.js",

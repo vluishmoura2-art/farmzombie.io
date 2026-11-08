@@ -21,8 +21,12 @@ import { ResourceHUD } from './resource-hud.js';
 import { Buildings } from './buildings.js';
 import { BuildingPlacement } from './building-placement.js';
 import { BuildingHUD } from './building-hud.js';
+import { roomPlacementReason } from './placement-feedback.js';
 import { Combat } from './combat.js';
 import { CombatHUD } from './combat-hud.js';
+import { t, applyStaticText } from './i18n.js';
+
+applyStaticText(document.querySelector('#game-shell'));
 
 const canvas = document.querySelector('#game');
 const world = new World();
@@ -61,8 +65,6 @@ function inspectAt(clientX, clientY, shiftKey = false) {
   if (building) upgradeUI.show(building, shiftKey);
 }
 canvas.addEventListener('contextmenu', event => { event.preventDefault(); inspectAt(event.clientX,event.clientY,event.shiftKey); });
-const positionX = document.querySelector('#position-x');
-const positionY = document.querySelector('#position-y');
 const overlay = document.querySelector('#pause-overlay');
 const pauseButton = document.querySelector('#pause-button');
 const resumeButton = document.querySelector('#resume-button');
@@ -83,16 +85,18 @@ const network = new MultiplayerClient({world,player,equipment,harvesting,buildin
   if(upgradeUI.open){ if(buildings.items.includes(upgradeUI.building))upgradeUI.refresh();else upgradeUI.close(); }
   if(shopUI.open)shopUI.refresh();
 });
-combatHUD.onRestart=()=>network.send('respawn',{},result=>{if(result.ok){document.querySelector('#game-over').hidden=true;autoAction.enabled=false;network.message('New session started');}});
+combatHUD.onRestart=()=>network.send('respawn',{},result=>{if(result.ok){document.querySelector('#game-over').hidden=true;autoAction.enabled=false;network.message(t('msg.respawned'));}});
 const sendUpgrade=(building,tier,ids,all)=>{
-  network.send('upgrade',{id:building?.id,tier,...(all?{ids,all:true}:{})},result=>network.message(result.ok?'Upgrade confirmed':result.reason));
+  network.send('upgrade',{id:building?.id,tier,...(all?{ids,all:true}:{})},result=>network.message(result.ok?t('msg.upgraded'):result.reason));
   return {ok:false,reason:'Waiting for server confirmation'};
 };
 upgrades.purchase=(b,tier)=>sendUpgrade(b,tier,null,false);
 upgrades.purchaseAll=(b,tier,ids)=>sendUpgrade(b,tier,ids,true);
-equipmentShop.purchase=(item,tier)=>{network.send('buy',{item,tier},r=>network.message(r.ok?'Equipment purchased':r.reason));return {ok:false,reason:'Waiting for server confirmation'};};
+equipmentShop.purchase=(item,tier)=>{network.send('buy',{item,tier},r=>network.message(r.ok?t('msg.purchased'):r.reason));return {ok:false,reason:'Waiting for server confirmation'};};
 const localAvailability=buildings.availability.bind(buildings);
 buildings.availability=type=>network.state&&!network.state.self.canBuild?'Leader building permission required':localAvailability(type);
+const localPlacementValidation = buildings.validate.bind(buildings);
+buildings.validate = (type,x,y,player) => localPlacementValidation(type,x,y,player) || roomPlacementReason(type,x,y,buildings,network.state,network.id);
 bindShopControls(window, document.querySelector('#shop-button'), shopUI,
   () => !paused && !combat.gameOver && !upgradeUI.open && !shopUI.open && !network.open,
   () => { clearControls(); placement.cancel(); buildingHUD.refresh(); }, false);
@@ -102,8 +106,17 @@ input.onHarvest = (screenX, screenY) => {
   const worldY = camera.screenToWorldY(screenY, renderer.height);
   player.aimAt(worldX, worldY);
   if (placement.selected) {
+    if (placement.pending) return;
+    placement.update(worldX,worldY,player);
+    if (placement.reason) { buildingHUD.show({ok:false,reason:placement.reason}); return; }
     const grid=world.gridSize;
-    network.send('place',{type:placement.selected,x:Math.floor(worldX/grid)*grid,y:Math.floor(worldY/grid)*grid},result=>network.message(result.ok?'Building placed':result.reason));
+    const request = {type:placement.selected,x:Math.floor(worldX/grid)*grid,y:Math.floor(worldY/grid)*grid};
+    placement.pending = request; buildingHUD.refresh();
+    network.send('place',request,result=>{
+      placement.pending=null;
+      buildingHUD.show(result.ok ? {ok:true,building:request} : result);
+      network.message(result.ok?'':result.reason);
+    });
     return;
   }
   network.act();
@@ -130,7 +143,7 @@ function setPaused(value) {
   clearControls();
   previousTime = null;
   overlay.hidden = !paused;
-  pauseButton.setAttribute('aria-label', paused ? 'Resume game' : 'Pause game');
+  pauseButton.setAttribute('aria-label', t(paused ? 'game.resume' : 'game.pause'));
   if (paused) resumeButton.focus({ preventScroll: true });
   else canvas.focus({ preventScroll: true });
 }
@@ -193,9 +206,9 @@ function frame(timestamp) {
   network.input(Math.max(0,realDelta),blocked,autoAction.enabled,input.x+touch.x,input.y+touch.y);
   network.update();
   if(!player.active && network.ready)autoAction.enabled=false;
-  autoAction.status=!autoAction.enabled?'OFF':!network.ready?'ON / Disconnected':blocked?'ON / Unavailable':equipment.selected.id==='sword'?'ON / Sword':'ON / Harvest';
+  autoAction.status=!autoAction.enabled?'off':!network.ready||blocked?'paused':equipment.selected.id==='sword'?'attack':'harvest';
   autoButton.setAttribute('aria-pressed', String(autoAction.enabled));
-  const autoText = `Auto Left Click ${autoAction.status} / ${equipment.selected.name} / E / Q`;
+  const autoText = t(`auto.${autoAction.status}`);
   if (autoButton.textContent !== autoText) autoButton.textContent = autoText;
   // A DPR change can happen when moving the window between monitors.
   if (renderer.pixelRatio !== renderer.targetRatio) {
@@ -208,12 +221,13 @@ function frame(timestamp) {
   minimap.update(timestamp,world,player,combat);
   hudElapsed += deltaTime;
   if (hudElapsed >= .1) {
-    positionX.value = String(Math.round(player.x));
-    positionY.value = String(Math.round(player.y));
+    // Read by the QA browser scripts; not shown in the HUD.
+    canvas.dataset.playerX = String(Math.round(player.x));
+    canvas.dataset.playerY = String(Math.round(player.y));
     resourceHUD.refresh();
     buildingHUD.refresh();
     combatHUD.refresh();
-    document.querySelector('#performance-stats').textContent = `${renderer.metrics.fps || '—'} FPS / ${renderer.metrics.renderMs.toFixed(2)}ms render / DPR ${renderer.pixelRatio}`;
+    if (paused) document.querySelector('#performance-stats').textContent = `${renderer.metrics.fps || '—'} FPS`;
     hudElapsed = 0;
   }
   requestAnimationFrame(frame);

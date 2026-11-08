@@ -1,22 +1,31 @@
+import { HORDE_BALANCE, ZOMBIE_SIZES } from './horde-config.js';
 import { ZOMBIE_TYPES } from './zombie-config.js';
 import { HUMANOID_RADIUS } from './humanoid.js';
 import { resourceCount } from './inventory.js';
 import { COMBAT_RULES } from './combat-config.js';
 
-export function createZombie(id, type, x, y) {
+export function createZombie(id, type, x, y, spec = {}) {
   const c = ZOMBIE_TYPES[type];
   if (!c) throw new RangeError(`Unknown zombie category: ${type}`);
-  return { id, type, x, y, radius: HUMANOID_RADIUS * c.size, angle: Math.PI / 2,
-    health: c.health, maxHealth: c.health, speed: c.speed, active: true, rewarded: false,
+  const size = ZOMBIE_SIZES[spec.size || 'normal'];
+  const scale = Math.min(HORDE_BALANCE.maxRadiusScale, c.size * size.scale * (spec.sizeMultiplier || 1));
+  const bounded = n => Math.min(HORDE_BALANCE.maxAttribute, n);
+  const health = bounded(c.health * size.health * (spec.healthMultiplier || 1));
+  const damageMultiplier = size.damage * (spec.damageMultiplier || 1);
+  return { size:spec.size || 'normal', scale, wave:spec.wave || 1,
+    playerDamage:bounded(c.playerDamage*damageMultiplier), buildingDamage:bounded(c.buildingDamage*damageMultiplier), stashDamage:bounded(c.stashDamage*damageMultiplier),
+    goldReward:Math.min(HORDE_BALANCE.maxReward,Math.max(1,Math.round(c.goldReward*size.reward*(spec.rewardMultiplier || 1)))),
+    id, type, x, y, radius: HUMANOID_RADIUS * scale, angle: Math.PI / 2,
+    health, maxHealth: health, speed: c.speed * size.speed, active: true, rewarded: false,
     walkPhase: 0, hitFlash: 0, attackCooldown: 0, pathCooldown: 0, path: [], pathIndex: 0, target: null };
 }
 export class Zombies {
   constructor(inventory, rules = COMBAT_RULES) {
     this.inventory = inventory; this.rules = rules; this.items = []; this.rewards = []; this.nextId = 1; this.kills = 0;
   }
-  spawn(type, x, y) {
+  spawn(type, x, y, spec) {
     if (this.items.length >= this.rules.maxZombies) return null;
-    const zombie = createZombie(this.nextId++, type, x, y); this.items.push(zombie); return zombie;
+    const zombie = createZombie(this.nextId++, type, x, y, spec); this.items.push(zombie); return zombie;
   }
   damage(zombie, damage) {
     if (!zombie?.active || zombie.health <= 0 || !Number.isFinite(damage) || damage <= 0) return false;
@@ -27,7 +36,7 @@ export class Zombies {
     zombie.active = false;
     if (!zombie.rewarded) {
       zombie.rewarded = true;
-      const gold = ZOMBIE_TYPES[zombie.type].goldReward;
+      const gold = zombie.goldReward;
       this.inventory.gold = resourceCount(resourceCount(this.inventory.gold) + gold);
       this.kills++;
       if (this.rewards.length >= this.rules.maxEffects) this.rewards.shift();

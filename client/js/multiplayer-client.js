@@ -2,6 +2,8 @@ import { takeAdmission } from './admission.js';
 import { equipmentTier } from './equipment-config.js';
 import { GridOccupancy } from './grid-occupancy.js';
 import { Buildings } from './buildings.js';
+import { t, reasonText } from './i18n.js';
+import { readSession, saveSession, clearSession } from './session.js';
 
 export class MultiplayerClient {
   constructor(models,onChange) {
@@ -17,27 +19,27 @@ export class MultiplayerClient {
   }
   get open(){return this.dialog.open;}
   connect(admission){
-    this.status.textContent=this.id?'Reconnecting…':'Connecting…';
+    this.status.textContent=t(this.id?'net.reconnecting':'net.connecting');
     const ws=this.ws=admission?.ws || new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/ws`);
-    ws.onopen=()=>{let token;try{token=sessionStorage.getItem('zombs-session');}catch{}ws.send(JSON.stringify({op:'hello',nickname:this.nickname||this.player.name||'Survivor',...(token?{token}:{})}));};
+    ws.onopen=()=>{const token=readSession();ws.send(JSON.stringify({op:'hello',nickname:this.nickname||this.player.name||'Survivor',...(token?{token}:{})}));};
     ws.onmessage=event=>{let m;try{m=JSON.parse(event.data);}catch{return;}
-      if(m.op==='welcome'){this.id=m.id;this.seq=m.seq;this.ready=true;this.retry=0;try{sessionStorage.setItem('zombs-session',m.token);}catch{}this.status.textContent='Connected';return;}
-      if(m.op==='full'){this.status.textContent='Server full · 50 / 50';this.stopped=true;return;}
-      if(m.op==='identityError'){this.status.textContent='Session unavailable · reload to start again';this.stopped=true;try{sessionStorage.removeItem('zombs-session');}catch{}return;}
+      if(m.op==='welcome'){this.id=m.id;this.seq=m.seq;this.ready=true;this.retry=0;saveSession(m.token);this.status.textContent=t('net.connected');return;}
+      if(m.op==='full'){this.status.textContent=t('net.full');this.stopped=true;return;}
+      if(m.op==='identityError'){this.status.textContent=t('net.sessionLost');this.stopped=true;clearSession();return;}
       if(m.op==='state'){this.apply(m);return;}
       if(m.op==='result'){this.pending.get(m.seq)?.(m);this.pending.delete(m.seq);if(!m.ok&&m.reason!=='cooldown'&&m.reason!=='out-of-range')this.message(m.reason);return;}
       if(m.op==='error')this.message(m.reason);
     };
-    ws.onclose=()=>{this.ready=false;this.status.textContent=this.stopped?this.status.textContent:'Disconnected · Reconnecting…';for(const resolve of this.pending.values())resolve({ok:false,reason:'Disconnected'});this.pending.clear();if(!this.stopped){this.retry=(this.retry||0)+1;this.reconnectTimer=setTimeout(()=>this.connect(),Math.min(10000,500*2**Math.min(this.retry,4)));}};
+    ws.onclose=()=>{this.ready=false;this.status.textContent=this.stopped?this.status.textContent:t('net.reconnecting');for(const resolve of this.pending.values())resolve({ok:false,reason:'Disconnected'});this.pending.clear();if(!this.stopped){this.retry=(this.retry||0)+1;this.reconnectTimer=setTimeout(()=>this.connect(),Math.min(10000,500*2**Math.min(this.retry,4)));}};
     ws.onerror=()=>{};
     if(admission){this.nickname=admission.nickname;ws.onmessage({data:JSON.stringify(admission.welcome)});queueMicrotask(()=>{for(const event of admission.queue)ws.onmessage(event);});if(ws.readyState!==1)ws.onclose();}
   }
-  message(text){document.querySelector('#network-message').textContent=text;this.dialog.querySelector('[data-clan-message]').textContent=text;}
+  message(text){text=reasonText(text);document.querySelector('#network-message').textContent=text;this.dialog.querySelector('[data-clan-message]').textContent=text;}
   send(op,data={},reply){if(!this.ready||this.ws.readyState!==1||this.ws.bufferedAmount>65536){reply?.({ok:false,reason:'Not connected'});return false;}const seq=++this.seq;if(reply)this.pending.set(seq,reply);this.ws.send(JSON.stringify({op,seq,...data}));return true;}
   input(dt,blocked,auto,x,y){this.elapsed+=dt;if(this.elapsed<.05)return;this.elapsed=0;this.send('input',{x:Math.max(-1,Math.min(1,x)),y:Math.max(-1,Math.min(1,y)),angle:this.player.angle,slot:this.equipment.selectedSlot,auto,blocked});}
   act(){this.send('input',{x:0,y:0,angle:this.player.angle,slot:this.equipment.selectedSlot,auto:false,blocked:false});this.send('action',{angle:this.player.angle});}
   apply(s){
-    this.state=s;this.status.textContent=`Connected · ${s.count} / ${s.capacity} · ${s.capacity-s.count} slots free`;
+    this.state=s;this.status.textContent=t('net.online',{count:s.count});
     for(const p of s.players)p.clanName=s.clans.find(c=>c.id===p.clanId)?.name||'';
     const me=s.players.find(p=>p.id===this.id);if(!me)return;
     this.nickname=me.name;Object.assign(this.player,me);this.player.harvestSwingTime=me.harvestSwingTime;
@@ -58,7 +60,6 @@ export class MultiplayerClient {
     for(const id of this.remote.keys())if(!ids.has(id))this.remote.delete(id);
     for(const e of s.events){if(e.kind==='damage')this.world.feedback.damage(e.x,e.y,e.amount,e.player);if(e.kind==='harvest'){const members=e.ids.map(id=>this.world.resources.items.find(n=>n.id===id)).filter(Boolean);for(const n of members){n.flashPending=true;n.hitUntil=s.time+.16;}this.world.feedback.harvest(members);}if((e.kind==='death'||e.kind==='combat')&&e.player===this.id)this.message(e.reason);}
     this.world.remotePlayers=[...this.remote.values()].map(r=>this.interpolate(r,now));this.world.networkSelf=me;
-    document.querySelector('#self-identity').textContent=`${me.name}${me.clanId?' ['+(s.clans.find(c=>c.id===me.clanId)?.name||'')+']':''}`;
     const signature=JSON.stringify([s.clans,s.invitations,s.players.map(p=>[p.id,p.name,p.online,p.clanId])]);
     if(this.open&&this.clanSignature!==signature)this.renderClan();this.clanSignature=signature;this.onChange();
   }
@@ -66,12 +67,16 @@ export class MultiplayerClient {
   update(){const now=performance.now();this.world.remotePlayers=[...this.remote.values()].map(r=>this.interpolate(r,now));}
   renderClan(){
     if(!this.state)return;const s=this.state,me=s.players.find(p=>p.id===this.id),clan=s.clans.find(c=>c.id===me?.clanId),leader=clan?.leader===this.id;
-    this.dialog.querySelector('[data-clan-status]').textContent=clan?`${clan.name} · ${clan.members.length}/4 members`:`No clan · ${s.clans.length}/10 clans`;
+    this.dialog.querySelector('[data-clan-status]').textContent=clan?t('clan.status',{name:clan.name,count:clan.members.length}):t('clan.none',{count:s.clans.length});
     this.dialog.querySelector('[data-create-section]').hidden=Boolean(clan);this.dialog.querySelector('[data-leave-clan]').hidden=!clan;
     const root=this.dialog.querySelector('[data-members]');root.replaceChildren();
     const row=(text,actions)=>{const div=document.createElement('div');div.className='clan-row';const span=document.createElement('span');span.textContent=text;div.append(span);for(const [label,fn]of actions){const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=fn;div.append(button);}root.append(div);};
-    for(const c of s.invitations)row(`Invitation: ${c.name}`,[['Accept',()=>this.send('invitation',{clan:c.id,accept:true})],['Reject',()=>this.send('invitation',{clan:c.id,accept:false})]]);
-    for(const member of clan?.members||[])row(`${member.name} · ${member.online?'Online':'Offline'}${member.id===clan.leader?' · Leader':''} · Build ${member.canBuild?'ON':'OFF'}`,leader&&member.id!==this.id?[[member.canBuild?'Build OFF':'Build ON',()=>this.send('permission',{target:member.id,allow:!member.canBuild})],['Kick',()=>this.send('kick',{target:member.id})]]:[]);
-    if(leader)for(const other of s.players.filter(p=>p.online&&!p.clanId))row(other.name,[['Invite',()=>this.send('invite',{target:other.id})]]);
+    for(const c of s.invitations)row(t('clan.invitation',{name:c.name}),[[t('clan.accept'),()=>this.send('invitation',{clan:c.id,accept:true})],[t('clan.reject'),()=>this.send('invitation',{clan:c.id,accept:false})]]);
+    for(const member of clan?.members||[]){
+      const parts=[member.name,t(member.online?'clan.online':'clan.offline')];
+      if(member.id===clan.leader)parts.push(t('clan.leader'));else parts.push(t(member.canBuild?'clan.canBuild':'clan.cannotBuild'));
+      row(parts.join(' · '),leader&&member.id!==this.id?[[t(member.canBuild?'clan.revokeBuild':'clan.grantBuild'),()=>this.send('permission',{target:member.id,allow:!member.canBuild})],[t('clan.kick'),()=>this.send('kick',{target:member.id})]]:[]);
+    }
+    if(leader)for(const other of s.players.filter(p=>p.online&&!p.clanId))row(other.name,[[t('clan.invite'),()=>this.send('invite',{target:other.id})]]);
   }
 }

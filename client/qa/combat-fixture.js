@@ -38,7 +38,7 @@ document.querySelector('#sword').addEventListener('click',()=>{
 document.querySelector('#towers').addEventListener('click',()=>{
   setup('Towers'); buildings.place('stash',3072,3264,player);inventory.gold=1000;
   const type=document.querySelector('#tower-type').value;
-  for(let i=0;i<4;i++){const x=2880+i*160; buildings.place(type,x,3072,player);combat.zombies.spawn(ZOMBIE_ORDER[i],x+32,2990);}
+  for(let i=0;i<ZOMBIE_ORDER.length;i++){const x=2880+i*160; buildings.place(type,x,3072,player);combat.zombies.spawn(ZOMBIE_ORDER[i],x+32,2990);}
   inventory.gold=0;render();
 });
 document.querySelector('#swing').addEventListener('click',()=>{combat.sword(equipment);render();});
@@ -56,7 +56,7 @@ document.querySelector('#night').addEventListener('click',()=>{
 });
 document.querySelector('#defeat').addEventListener('click',()=>{
   setup('Stash defeat');const stash=buildings.place('stash',3072,3072,player).building;
-  stash.health=1;combat.zombies.spawn('emerald',3104,3008);player.x=2400;render();
+  stash.health=1;combat.zombies.spawn('yellow',3104,3008);player.x=2400;render();
 });
 window.addEventListener('resize',()=>{renderer.resize();render();});
 categories();

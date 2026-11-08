@@ -1,14 +1,17 @@
+import { HUMANOID_RADIUS } from './humanoid.js';
 import { ZOMBIE_TYPES } from './zombie-config.js';
+import { CANVAS_FONT } from './visual-config.js';
+import { t } from './i18n.js';
 
 export class CombatRenderer {
   constructor(humanoid) { this.humanoid = humanoid; }
   draw(ctx, combat, left, top, width, height, profile = {shadows:true,motion:true}, reducedMotion = false) {
     for (const z of combat.zombies.items) {
       if (!z.active || z.x + z.radius < left || z.x - z.radius > left + width || z.y + z.radius < top || z.y - z.radius > top + height) continue;
-      const c = ZOMBIE_TYPES[z.type];
-      if (profile.shadows) { ctx.fillStyle='#20331c38';ctx.beginPath();ctx.ellipse(z.x+5,z.y+9,28*c.size,18*c.size,0,0,Math.PI*2);ctx.fill(); }
+      const c = ZOMBIE_TYPES[z.type], scale = z.radius / HUMANOID_RADIUS;
+      if (profile.shadows) { ctx.fillStyle='#20331c38';ctx.beginPath();ctx.ellipse(z.x+5,z.y+9,28*scale,18*scale,0,0,Math.PI*2);ctx.fill(); }
       const bob = profile.motion && !reducedMotion ? Math.sin(z.walkPhase || 0)*1.2 : 0;
-      ctx.save(); ctx.translate(z.x, z.y+bob); ctx.rotate(z.angle - Math.PI / 2); ctx.scale(c.size, c.size);
+      ctx.save(); ctx.translate(z.x, z.y+bob); ctx.rotate(z.angle - Math.PI / 2); ctx.scale(scale, scale);
       this.humanoid.draw(ctx, c.color, z.hitFlash > 0 ? '#F1F3ED' : c.outline); ctx.restore();
       if (z.health < z.maxHealth) {
         ctx.fillStyle = '#26372d'; ctx.fillRect(z.x - 22, z.y - z.radius - 10, 44, 5);
@@ -29,11 +32,12 @@ export class CombatRenderer {
       else { ctx.moveTo(e.x, e.y); ctx.lineTo(e.tx, e.ty); }
       ctx.stroke(); ctx.restore();
     }
-    ctx.font = 'bold 13px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+    ctx.font = `bold 13px ${CANVAS_FONT}`; ctx.textAlign = 'center';
     for (const r of combat.zombies.rewards) {
       if(r.x<left||r.x>left+width||r.y<top||r.y>top+height)continue;
+      const label = t('hud.goldGain', { amount: r.amount });
       ctx.save(); ctx.globalAlpha = Math.min(1, r.time * 2); ctx.lineWidth = 3; ctx.strokeStyle = '#344329'; ctx.fillStyle = '#ffdd65';
-      ctx.strokeText(`+${r.amount} gold`, r.x, r.y); ctx.fillText(`+${r.amount} gold`, r.x, r.y); ctx.restore();
+      ctx.strokeText(label, r.x, r.y); ctx.fillText(label, r.x, r.y); ctx.restore();
     }
   }
 }

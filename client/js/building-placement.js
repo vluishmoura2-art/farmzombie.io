@@ -6,6 +6,7 @@ export class BuildingPlacement {
     this.y = 0;
     this.visible = false;
     this.reason = '';
+    this.pending = null;
   }
   select(type) { this.selected = type; this.visible = false; }
   cancel() { this.selected = null; this.visible = false; }

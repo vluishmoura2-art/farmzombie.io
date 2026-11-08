@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 export const readHarvestState = tab => tab.playwright.evaluate(() => ({
-  x:Number(document.querySelector('#position-x').value),y:Number(document.querySelector('#position-y').value),
+  x:Number(document.querySelector('#game').dataset.playerX),y:Number(document.querySelector('#game').dataset.playerY),
   width:innerWidth,height:innerHeight,wood:Number(document.querySelector('#wood-count').value),stone:Number(document.querySelector('#stone-count').value),gold:Number(document.querySelector('#gold-count').value),
   feedback:document.querySelector('#harvest-feedback').textContent,
 }));
